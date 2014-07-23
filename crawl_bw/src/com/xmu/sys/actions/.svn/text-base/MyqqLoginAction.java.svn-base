@@ -1,0 +1,200 @@
+/** 
+  *QQInfoAction.java 2009-11-25 xujb
+  */
+package com.meiah.sys.actions;
+
+ 
+import org.apache.log4j.Logger;
+
+import com.googlecode.jsonplugin.annotations.JSON;
+import com.meiah.core.actions.BaseAction;
+import com.meiah.core.pojo.Page;
+import com.meiah.sys.pojo.MyqqLoginInfo;
+import com.meiah.sys.service.SysService;
+import com.opensymphony.xwork2.ModelDriven;
+
+/**
+ * @function 系统设置模块 -- 工作QQ管理
+ * @author xujb
+ */
+public class MyqqLoginAction extends BaseAction implements ModelDriven<MyqqLoginInfo>{
+	
+	private static Logger logger = Logger.getLogger(MyqqLoginAction.class);
+	
+	private static final long serialVersionUID = 1L;
+	 
+	private SysService sysService;                        
+
+	private MyqqLoginInfo myqqLoginInfo = new MyqqLoginInfo(); //系统策略
+	
+	private String tips = "";  //提示消息
+	
+	private Long id ;  
+	
+	private int count; //总数
+	 
+
+ 
+	/**
+	 * 
+	 * @function 列表
+	 * @return String
+	 */
+	@SuppressWarnings("unchecked")
+	public String list(){
+		 
+		//设置默认排序方式
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.ASC);
+		}
+		page = sysService.getPageList("MyqqLogin.getPageList", "MyqqLogin.getTotalCount", myqqLoginInfo, page);  
+		 
+		return "list";
+	}
+ 
+	/**
+	 * 
+	 * @function 获取验证码图片相关信息
+	 * @return String
+	 */
+	public String preInputCheckCode(){  
+		
+		String url = getRequest().getRealPath("/");
+		myqqLoginInfo = sysService.getRandomCheckCode(id,url);
+		return "inputcheckcode";
+	}
+	/**
+	 * 
+	 * @function 保存验证码相关信息
+	 * @return String
+	 */
+	public String inputCheckCode(){  
+		
+		String url = getRequest().getContextPath();
+		sysService.saveCheckCode(myqqLoginInfo,url); 
+		tips = "操作成功";
+		myqqLoginInfo = sysService.getRandomCheckCode(null,url);
+		return "inputcheckcode";
+	} 
+	
+	/**
+	 * 
+	 * @function 查看数据库是否有验证码需要输入
+	 * @return String
+	 */
+	public String checkCheckCode(){  
+		 
+		 
+		count = sysService.getCountCheckCode();
+		return JSON;
+	} 
+	
+	
+	/**
+	 * 
+	 * @function 保存
+	 * @return String
+	 */
+	public String edit(){  
+		  
+	    try{
+	    	  
+	    	tips = sysService.saveMyqqLoginInfo(myqqLoginInfo); 
+	    	  
+		}catch(Exception e){ 
+			logger.error("保存工作QQ信息出错", e);
+			tips =  "系统中已经注册了该工作QQ，请确认";
+		}
+	    
+		return JSON;
+	}
+	
+	/**
+	 * 
+	 * @function 删除
+	 * @return String
+	 */
+	public String delete(){  
+		sysService.removeObject("MyqqLogin.delete", myqqLoginInfo.getId()); 
+		return JSON;
+	}
+	
+	/**
+	 * 
+	 * @function 获取信息
+	 * @return String
+	 */
+	@JSON(serialize=false)
+	public String getInfo(){ 
+		myqqLoginInfo = (MyqqLoginInfo)sysService.getObject("MyqqLogin.getObj",  id);  
+		return JSON;
+	}
+	 
+	 
+ 
+
+	public void setQqInfo(MyqqLoginInfo myqqLoginInfo) {
+		this.myqqLoginInfo = myqqLoginInfo;
+	}
+
+
+
+
+	public String getTips() {
+		return tips;
+	}
+  
+	public void setTips(String tips) {
+		this.tips = tips;
+	}
+ 
+	 
+	/**
+	 * 实现接口ModelDriven方法
+	 */
+	
+	public MyqqLoginInfo getModel() {
+		 
+		return myqqLoginInfo;
+	}
+	
+	/**
+	 * 
+	 * @function spring注入service接口方法
+	 * @param sysService void
+	 */
+	public void setSysService(SysService sysService) {
+		this.sysService = sysService;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
+
+	public int getCount() {
+		return count;
+	}
+
+
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public MyqqLoginInfo getMyqqLoginInfo() {
+		return myqqLoginInfo;
+	}
+
+	public void setMyqqLoginInfo(MyqqLoginInfo myqqLoginInfo) {
+		this.myqqLoginInfo = myqqLoginInfo;
+	}
+
+
+
+}

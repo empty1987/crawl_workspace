@@ -1,0 +1,85 @@
+package com.meiah.sys.pojo;
+
+import com.meiah.core.pojo.Entity;
+
+/** 
+ *Copyright(C):	
+ *@n
+ *@n File:			Menu.java
+ *@n Function:		菜单实体类
+ *@n Author:		xjb整合	 2009-7-7
+ */
+
+public class SysMenu extends Entity{
+	
+	 
+		private static final long serialVersionUID = 1L;
+
+		private Long id;        //id
+	    
+	    private Long parId;     //父id
+	      
+	    private String name;   //菜单名
+	    
+	    private String url;    //菜单链接地址
+	    
+	    private Integer sort;      //菜单排序 
+	     
+	    
+	    public SysMenu(){
+			
+		}
+	    
+	    public SysMenu(Long id,Long parId,String name,String url,Integer sort){
+			
+	    	this.id = id;
+	    	this.parId = parId;
+	    	this.name = name;
+	    	this.url = url;
+	    	this.sort = sort;
+		}
+	    
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+  
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+ 
+		public Long getParId() {
+			return parId;
+		}
+
+		public void setParId(Long parId) {
+			this.parId = parId;
+		}
+
+	 
+		public Integer getSort() {
+			return sort;
+		}
+
+		public String getUrl() {
+			return url;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+
+		public void setSort(Integer sort) {
+			this.sort = sort;
+		}
+ 
+  
+
+}

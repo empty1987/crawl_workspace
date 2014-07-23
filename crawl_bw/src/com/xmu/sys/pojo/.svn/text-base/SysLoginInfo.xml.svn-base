@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="SysLoginInfo">
+	<typeAlias alias="syslogininfo"
+		type="com.meiah.sys.pojo.SysLoginInfo" />
+
+	<insert id="add" parameterClass="syslogininfo">
+		INSERT INTO SysLoginInfo (username,etime) VALUES
+		(#username#,#etime#)
+	</insert>
+
+	<select id="getTotalByUsername" parameterClass="java.lang.String"
+		resultClass="java.lang.Integer">
+		<![CDATA[
+		SELECT count(*) FROM SysLoginInfo as s WHERE to_days(now()) - to_days(s.etime) < 1 AND s.username = #username#
+	]]>
+	</select>
+	<delete id="delete" parameterClass="java.lang.Integer">
+		<![CDATA[
+			DELETE FROM  SysLoginInfo  WHERE to_days(now()) - to_days(etime) < 1 AND 1=#id#
+		]]>
+	</delete>
+</sqlMap>

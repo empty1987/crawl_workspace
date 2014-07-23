@@ -1,0 +1,448 @@
+package com.meiah.core.util;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServlet;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
+import cn.banny.util.io.Util;
+
+import com.meiah.core.pojo.SystemParam;
+import com.meiah.core.service.BaseService;
+import com.meiah.sys.pojo.SysMenu;
+import com.meiah.sys.pojo.SysRole;
+
+@SuppressWarnings("unchecked")
+public class Constants extends HttpServlet {
+	private static Logger logger = Logger.getLogger(Constants.class);
+
+	private static final long serialVersionUID = 1L;
+
+	public static final String USERSESSION = "UserSession";
+
+	public static List<SysMenu> menuList = new ArrayList();
+
+	public static List<SysRole> roleList = new ArrayList();
+
+	public static Map titleMap = new HashMap();
+	
+	public static Map stamp = new HashMap(); // 存放时间戳
+
+	private static FileFilter filefilter = new FileFilter() {
+		public boolean accept(File file) {
+			if (file.getName().startsWith("title"))
+				return true;
+			else
+				return false;
+		}
+	};
+
+	public static String NOWDATEFLAG4STATIC = ""; // 记录今日日期字符串
+
+	public static String NOWDATEFLAG4SYN = ""; // 记录今日日期字符串
+
+	public static String MSGServiceURL = "";
+
+	public static String MSGUserName = "";
+
+	public static String MSGPassWord = "";
+
+	public static String mysqlUrl = "";
+
+	public static String mysqlUser = "";
+
+	public static String mysqlPassword = "";
+
+	public static int ExportMaxRow = 20000;
+
+	public static String TrsServer;
+
+	public static String TrsPort;
+
+	public static String TrsUser;
+
+	public static String TrsPassword;
+
+	public static String TrsChatViewName;
+
+	public static String TrsQQViewName;
+
+	public static String MainServiceURL = "";
+
+	public static String MainServiceURL4Analyse = "";
+
+	public static String MainServiceUser = "";
+
+	public static String MainServicePassword = "USB4HC8tW8Eze94pfvSF1z1F+4QG1vE7";
+	
+	public static String GPSServiceURL="";//GPS地址
+	public static String GPSServiceUser = "";//GPS用户名
+	public static String GPSServicePassword="";//GPS密码
+	
+	public static String ISSSL = "Y"; // 是否开启证书认证
+
+	public static String ISSTATIC = "Y"; // 是否开启统计功能
+
+	public static String ISALARM = "Y"; // 是否开启报警功能
+
+	public static String ISBAKDATABASE = "Y"; // 是否开启备份数据库功能
+
+	public static String ISREDUCEDATABASE = "Y";// 是否开启执行还原数据库功能
+
+	public static String ISCHECKCODE = "Y"; // 是否开启检查验证码功能
+ 
+	public static String ISSHOWCHAT = "Y"; // 是否显示聊天内容
+
+	public static String ISSHOWTYPE = "Y"; // 是否显示类别
+
+	public static String ISDATAANALYSE = "Y";// 是否数据分析
+
+	public static String ISSHOWPOLICY4CHILD = "Y";// 是否打开查看直接下级的策略
+
+	public static String ISTRSDYNANIC = "Y"; // 是否采用动态连接
+
+	public static String ISFILTERUSER = ""; // 是否开启过滤用户登录
+	
+	public static String ISGPS = "";//是否开启GPS定位
+	
+	public static String GPSNameSpace = ""; //GPS命名空间
+	
+	public static int GPSMax = 5; 	//单日最大发送定位任务量
+
+	public static String syspassword = "2869372038510A602D69026455237077"; // 系统配置权限密码
+	public static final String GPMEMBER_CONSTANTS_1 = "§\\|\\|§"; //QQ属性间隔符
+	public static final String GPMEMBER_CONSTANTS_2 = "§\\$§§\\$";//QQ数据之间间隔符
+	public static final String GPMEMBER_CONSTANTS_3 = "§\\$§\\$§\\$";//QQ不同数据组合间隔符
+	public static int pageNum = 10; //空间留言单次取回多少数据
+	
+	//是否使用UKEY
+	public static String UKEYIP = "";//ukey映射IP
+	public static String ISUKEY = "Y";//是否使用ukey
+	
+	public static String proxyUrl = "";//代理认证服务器
+
+	static {
+		
+		
+		initParam();
+		disposeSQL();
+	}
+
+	private static void initSysParam() {
+
+		String classpath = Constants.class.getResource("/").getPath()
+				.replaceAll("%20", " ");
+		String filePath = classpath + "database.properties";
+
+		Properties props = new Properties();
+		try {
+			FileInputStream istream = new FileInputStream(filePath);
+			props.load(istream);
+			istream.close();
+			PropertyConfigurator.configure(props);
+			syspassword = props.getProperty("syspassword", syspassword);
+
+			MainServiceUser = props.getProperty("MainServiceUser", Util
+					.getMacheCode());
+
+			mysqlUrl = props.getProperty("jdbc.url");
+			mysqlUser = props.getProperty("jdbc.user", mysqlUser);
+			mysqlPassword = props.getProperty("jdbc.password", mysqlPassword);
+
+			TrsServer = props.getProperty("TrsServer", "");
+			TrsPort = props.getProperty("TrsPort", "");
+			TrsUser = props.getProperty("TrsUser", "");
+			TrsPassword = props.getProperty("TrsPassword", "");
+			TrsChatViewName = props.getProperty("TrsChatViewName", "");
+			TrsQQViewName = props.getProperty("TrsQQViewName", "");
+			ISSSL = props.getProperty("ISSSL", ISSSL);
+			MainServiceURL = props.getProperty("MainServiceURL", "");
+			MainServiceURL4Analyse = props.getProperty(
+					"MainServiceURL4Analyse", "");
+			MainServicePassword = props.getProperty("MainServicePassword",
+					MainServicePassword);
+			
+			//IP落地查询webservice相关参数
+			GPSServiceUser=props.getProperty("GPSServiceUser",GPSServiceUser);
+			GPSServicePassword = props.getProperty("GPSServicePassword", GPSServicePassword);
+			GPSServiceURL = props.getProperty("GPSServiceURL", GPSServiceURL);
+			GPSNameSpace = props.getProperty("GPSNameSpace", "");
+			GPSMax = Integer.valueOf(props.getProperty("GPSMax", GPSMax+""));
+			GPSMax = GPSMax >100?100:GPSMax;		//限定单日不超过一百
+			
+			ISBAKDATABASE = props.getProperty("ISBAKDATABASE", ISBAKDATABASE);
+			ISREDUCEDATABASE = props.getProperty("ISREDUCEDATABASE",
+					ISREDUCEDATABASE);
+			ISCHECKCODE = props.getProperty("ISCHECKCODE", ISCHECKCODE);
+		 
+			ISSHOWCHAT = props.getProperty("ISSHOWCHAT", ISSHOWCHAT);
+			ISSHOWTYPE = props.getProperty("ISSHOWTYPE", ISSHOWTYPE);
+			ISALARM = props.getProperty("ISALARM", ISALARM);
+
+			MSGServiceURL = props.getProperty("MSGServiceURL");
+			MSGUserName = props.getProperty("MSGUserName");
+			MSGPassWord = props.getProperty("MSGPassWord");
+			ISSTATIC = props.getProperty("ISSTATIC", ISSTATIC);
+			ISDATAANALYSE = props.getProperty("ISDATAANALYSE", ISDATAANALYSE);
+		 
+			ISSHOWPOLICY4CHILD = props.getProperty("ISSHOWPOLICY4CHILD",
+					ISSHOWPOLICY4CHILD);
+			ISTRSDYNANIC = props.getProperty("ISTRSDYNANIC", ISTRSDYNANIC);
+			ISGPS = props.getProperty("ISGPS", "Y");
+			
+			
+			ISFILTERUSER = props.getProperty("ISFILTERUSER", ISFILTERUSER);
+			ISUKEY = props.getProperty("ISUKEY" , ISUKEY);
+			UKEYIP = props.getProperty("UKEYIP" , UKEYIP);
+			
+			proxyUrl = "https://"+UKEYIP + ":10188/qq";
+
+		} catch (IOException e) {
+			System.out.println("Could not read configuration file [" + filePath
+					+ "].");
+			System.out.println("Ignoring configuration file [" + filePath
+					+ "].");
+		}
+
+	}
+
+	/**
+	 * 
+	 * @function
+	 */
+	private static void disposeSQL() {
+		
+		String classPath = Constants.class.getResource("/").getPath().replaceAll("%20", " ").substring(1);
+		String filePath = classPath + "update.sql";
+		File file = new File(filePath);
+		if(file.exists())
+		{
+			String dataUrl = classPath + "database.properties";
+			Properties props = new Properties();
+			FileInputStream istream;
+			try {
+				istream = new FileInputStream(dataUrl);
+				props.load(istream);
+				istream.close();
+				PropertyConfigurator.configure(props);
+				mysqlUser = props.getProperty("jdbc.user", mysqlUser);
+				mysqlPassword = props.getProperty("jdbc.password", mysqlPassword);
+				File datFile = new File(classPath+"update.bat");
+				if(!datFile.exists())
+				{
+					datFile.createNewFile();
+					StringBuffer sb = new StringBuffer();
+					sb.append("@echo off\n");
+					sb.append("cd mysql/bin\n");
+					sb.append("mysql -u").append(mysqlUser).append(" ");
+					sb.append("-p"+mysqlPassword).append(" " + "qqdb < ");
+					sb.append(filePath+"\n").append(":end");
+					FileOutputStream out= new FileOutputStream(datFile);
+					out.write(sb.toString().getBytes());
+					out.flush();
+					out.close();
+				}
+				Runtime run = Runtime.getRuntime();
+				String command = "cmd /c ";
+				command += datFile.getAbsolutePath();
+				run.exec(command);
+				file.delete();
+			} catch (IOException e) {
+				System.out.println("Could not read configuration file [" + filePath
+						+ "].");
+				System.out.println("Ignoring configuration file [" + filePath
+						+ "].");
+			}
+			
+		}else
+			return;
+	}
+
+	private static void initTitleParam() {
+
+		String classpath = Constants.class.getResource("/").getPath()
+				.replaceAll("%20", " ");
+
+		File[] fl = new File(classpath).listFiles(filefilter);
+		
+		if (fl != null && fl.length > 0) {
+			for (int i = 0; i < fl.length; i++) {
+				Properties props = new Properties();
+				try {
+					FileInputStream istream = new FileInputStream(fl[i]); 
+		            InputStreamReader inputStramReader = new InputStreamReader(istream, "utf-8");
+					props.load(inputStramReader);
+					istream.close();
+					PropertyConfigurator.configure(props);
+					String sno = props.getProperty("sno");
+					if(StringUtils.trimToEmpty(sno).equals(""))logger.error("文件"+fl[i].getPath()+"中配置属性sno不能为空！请修改该属性后重启服务");
+					//读取各属性
+				 
+					Map map = new HashMap();
+					//配置各属性
+					map.put("LTNR", props.getProperty("LTNR"));
+					map.put("LTNR_FYQQ", props.getProperty("LTNR_FYQQ"));
+					map.put("LTNR_QQQUN", props.getProperty("LTNR_QQQUN"));
+					map.put("LTNR_QUNHAO", props.getProperty("LTNR_QUNHAO"));
+					map.put("QQQUNJC", props.getProperty("QQQUNJC"));
+					map.put("QQQUNJC_QUNNICHENG", props.getProperty("QQQUNJC_QUNNICHENG"));
+					map.put("QQQUNJC_GZQQ", props.getProperty("QQQUNJC_GZQQ"));
+					map.put("QQQUNFX", props.getProperty("QQQUNFX")); 
+					map.put("QQVIEW", props.getProperty("QQVIEW"));
+					map.put("LINR_PVIEW", props.getProperty("LINR_PVIEW"));
+					map.put("LINR_RVIEW", props.getProperty("LINR_RVIEW"));
+					map.put("QQDINGWEI", props.getProperty("QQDINGWEI"));
+					
+					titleMap.put(sno, map);
+				} catch (IOException e) {
+					System.out.println("Could not read configuration file ["
+							+ fl[i].getPath() + "].");
+					
+				}
+			}
+		}
+
+	}
+
+	private static void initParam() {
+
+		initSysParam();
+		initTitleParam();
+	}
+
+	public static void saveINI(SystemParam systemParam) {
+
+		String filePath = Constants.class.getResource("/").getPath()
+				.replaceAll("%20", " ");
+		filePath = filePath + "database.properties";
+
+		Properties props = new Properties();
+		FileInputStream istream = null;
+		FileOutputStream o = null;
+		try {
+			istream = new FileInputStream(filePath);
+			props.load(istream);
+
+			props.setProperty("jdbc.url", StringUtils.trim(systemParam
+					.getMysqlUrl()));
+			props.setProperty("jdbc.user", StringUtils.trim(systemParam
+					.getMysqlUser()));
+			props.setProperty("jdbc.password", StringUtils.trim(systemParam
+					.getMysqlPassword()));
+			props.setProperty("TrsServer", StringUtils.trim(systemParam
+					.getTrsServer()));
+			props.setProperty("TrsUser", StringUtils.trim(systemParam
+					.getTrsUser()));
+			props.setProperty("TrsPassword", StringUtils.trim(systemParam
+					.getTrsPassword()));
+			props.setProperty("MSGServiceURL", StringUtils.trim(systemParam
+					.getMsgServiceURL()));
+			props.setProperty("MSGUserName", StringUtils.trim(systemParam
+					.getMsgUserName()));
+			props.setProperty("MSGPassWord", StringUtils.trim(systemParam
+					.getMsgPassWord()));
+
+			props
+					.setProperty("ISSSL", StringUtils.trim(systemParam
+							.getIsssl()));
+			props.setProperty("ISALARM", StringUtils.trim(systemParam
+					.getIsalarm()));
+			props.setProperty("ISCHECKCODE", StringUtils.trim(systemParam
+					.getIscheckcode()));
+			props.setProperty("ISBAKDATABASE", StringUtils.trim(systemParam
+					.getIsbakdatabase()));
+			props.setProperty("ISREDUCEDATABASE", StringUtils.trim(systemParam
+					.getIsreducedatabase()));
+			 
+			props.setProperty("ISSHOWCHAT", StringUtils.trim(systemParam
+					.getIsshowchat()));
+			props.setProperty("ISSTATIC", StringUtils.trim(systemParam
+					.getIsstatic()));
+			props.setProperty("ISSHOWTYPE", StringUtils.trim(systemParam
+					.getIsshowtype()));
+			props.setProperty("ISDATAANALYSE", StringUtils.trim(systemParam
+					.getIsdataanalyse()));
+			 
+			props.setProperty("ISSHOWPOLICY4CHILD", StringUtils
+					.trim(systemParam.getIsshowpolicy4child()));
+
+			props.setProperty("ISTRSDYNANIC", StringUtils.trim(systemParam
+					.getIstrsdynanic()));
+			 
+			props.setProperty("GPSServiceUser", StringUtils.trim(systemParam.getGpsserviceuser()));
+			props.setProperty("GPSServicePassword", StringUtils.trim(systemParam.getGpsservicepassword()));
+			props.setProperty("GPSServiceURL", StringUtils.trim(systemParam.getGpsserviceurl()));
+			props.setProperty("GPSNameSpace", StringUtils.trim(systemParam.getGpsnamespace()));
+			props.setProperty("GPSMax", StringUtils.trim(systemParam.getGpsmax()));
+			props
+					.setProperty("ISGPS", StringUtils.trim(systemParam
+							.getIsgps()));
+			
+			props.setProperty("ISFILTERUSER", StringUtils.trim(systemParam
+					.getIsfilteruser()));
+			props.setProperty("ISUKEY", StringUtils.trim(systemParam.getIsUkey()));
+			props.setProperty("UKEYIP", StringUtils.trim(systemParam.getUkeyIp()));
+			PropertyConfigurator.configure(props);
+			o = new FileOutputStream(filePath);
+			props.save(o, "");
+			initParam();
+		} catch (IOException e) {
+			System.out.println("Could not read configuration file [" + filePath
+					+ "].");
+			System.out.println("Ignoring configuration file [" + filePath
+					+ "].");
+		} finally {
+			try {
+				istream.close();
+				o.close();
+			} catch (IOException e) {
+				istream = null;
+				o = null;
+			}
+
+		}
+	}
+
+	private void loadBasicData() {
+		BaseService baseService;
+		try {
+			baseService = (BaseService) getBean("baseService");
+
+			List list_menu = baseService.getList("SysMenu.getList4Cache", null);
+			if (!(CommonUtil.isNull(list_menu))) {
+				menuList = list_menu;
+			}
+
+			List list_role = baseService.getList("SysRole.getList4Cache", null);
+			if (!(CommonUtil.isNull(list_role))) {
+				roleList = list_role;
+			}
+
+			list_menu = null;
+			list_role = null;
+		} catch (Exception e) {
+			logger.error("将基础数据加载到内存错误", e);
+		}
+	}
+
+	public Object getBean(String beanName) {
+		return ContextLookup.getBean(getServletContext(), beanName);
+	}
+
+	public void init() {
+		loadBasicData();
+	}
+}

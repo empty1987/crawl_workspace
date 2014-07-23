@@ -1,0 +1,219 @@
+package com.meiah.core.pojo;
+
+import com.meiah.core.util.Constants;
+
+
+public class SystemParam {
+	 
+	private String mysqlUrl = Constants.mysqlUrl;
+	private String mysqlUser  = Constants.mysqlUser;
+	private String mysqlPassword = Constants.mysqlPassword;
+	private String trsServer = Constants.TrsServer;
+	private String trsUser = Constants.TrsUser;
+	private String trsPassword = Constants.TrsPassword;
+	private String msgServiceURL = Constants.MSGServiceURL;
+	private String msgUserName = Constants.MSGUserName;
+	private String msgPassWord = Constants.MSGPassWord;
+	private String isssl = Constants.ISSSL;
+	private String isalarm = Constants.ISALARM;
+	private String ischeckcode = Constants.ISCHECKCODE;
+	private String isbakdatabase = Constants.ISBAKDATABASE;
+	private String isreducedatabase = Constants.ISREDUCEDATABASE;
+	 
+	private String isshowchat = Constants.ISSHOWCHAT;
+	private String isstatic = Constants.ISSTATIC;
+	private String isshowtype = Constants.ISSHOWTYPE;
+	private String isdataanalyse = Constants.ISDATAANALYSE; 
+ 
+    private String isshowpolicy4child = Constants.ISSHOWPOLICY4CHILD;
+    private String istrsdynanic = Constants.ISTRSDYNANIC;
+	private String isfilteruser = Constants.ISFILTERUSER;
+	private String gpsserviceuser = Constants.GPSServiceUser;
+	private String gpsservicepassword = Constants.GPSServicePassword;
+	private String gpsserviceurl = Constants.GPSServiceURL;
+	private String gpsnamespace = Constants.GPSNameSpace;
+	private String gpsmax = Constants.GPSMax+""; 
+	
+	private String ukeyIp = Constants.UKEYIP;
+	private String isUkey = Constants.ISUKEY;
+	
+	public String getUkeyIp() {
+		return ukeyIp;
+	}
+	public void setUkeyIp(String ukeyIp) {
+		this.ukeyIp = ukeyIp;
+	}
+	public String getIsUkey() {
+		return isUkey;
+	}
+	public void setIsUkey(String isUkey) {
+		this.isUkey = isUkey;
+	}
+	private String isgps = Constants.ISGPS;
+	 
+	public String getGpsmax() {
+		return gpsmax;
+	}
+	public void setGpsmax(String gpsmax) {
+		this.gpsmax = gpsmax;
+	}
+	public String getGpsnamespace() {
+		return gpsnamespace;
+	}
+	public void setGpsnamespace(String gpsnamespace) {
+		this.gpsnamespace = gpsnamespace;
+	}
+	public String getGpsservicepassword() {
+		return gpsservicepassword;
+	}
+	public void setGpsservicepassword(String gpsservicepassword) {
+		this.gpsservicepassword = gpsservicepassword;
+	}
+	public String getGpsserviceurl() {
+		return gpsserviceurl;
+	}
+	public void setGpsserviceurl(String gpsserviceurl) {
+		this.gpsserviceurl = gpsserviceurl;
+	}
+	public String getGpsserviceuser() {
+		return gpsserviceuser;
+	}
+	public void setGpsserviceuser(String gpsserviceuser) {
+		this.gpsserviceuser = gpsserviceuser;
+	}
+	public String getIsgps() {
+		return isgps;
+	}
+	public void setIsgps(String isgps) {
+		this.isgps = isgps;
+	}
+	public String getIsalarm() {
+		return isalarm;
+	}
+	public void setIsalarm(String isalarm) {
+		this.isalarm = isalarm;
+	}
+	public String getIsbakdatabase() {
+		return isbakdatabase;
+	}
+	public void setIsbakdatabase(String isbakdatabase) {
+		this.isbakdatabase = isbakdatabase;
+	}
+ 
+	public String getIscheckcode() {
+		return ischeckcode;
+	}
+	public void setIscheckcode(String ischeckcode) {
+		this.ischeckcode = ischeckcode;
+	}
+	public String getIsreducedatabase() {
+		return isreducedatabase;
+	}
+	public void setIsreducedatabase(String isreducedatabase) {
+		this.isreducedatabase = isreducedatabase;
+	}
+	public String getIsshowchat() {
+		return isshowchat;
+	}
+	public void setIsshowchat(String isshowchat) {
+		this.isshowchat = isshowchat;
+	}
+	public String getIsshowtype() {
+		return isshowtype;
+	}
+	public void setIsshowtype(String isshowtype) {
+		this.isshowtype = isshowtype;
+	}
+	public String getIsssl() {
+		return isssl;
+	}
+	public void setIsssl(String isssl) {
+		this.isssl = isssl;
+	}
+	public String getIsstatic() {
+		return isstatic;
+	}
+	public void setIsstatic(String isstatic) {
+		this.isstatic = isstatic;
+	}
+	public String getMsgPassWord() {
+		return msgPassWord;
+	}
+	public void setMsgPassWord(String msgPassWord) {
+		this.msgPassWord = msgPassWord;
+	}
+	public String getMsgServiceURL() {
+		return msgServiceURL;
+	}
+	public void setMsgServiceURL(String msgServiceURL) {
+		this.msgServiceURL = msgServiceURL;
+	}
+	public String getMsgUserName() {
+		return msgUserName;
+	}
+	public void setMsgUserName(String msgUserName) {
+		this.msgUserName = msgUserName;
+	}
+	public String getMysqlPassword() {
+		return mysqlPassword;
+	}
+	public void setMysqlPassword(String mysqlPassword) {
+		this.mysqlPassword = mysqlPassword;
+	}
+	public String getMysqlUrl() {
+		return mysqlUrl;
+	}
+	public void setMysqlUrl(String mysqlUrl) {
+		this.mysqlUrl = mysqlUrl;
+	}
+	public String getMysqlUser() {
+		return mysqlUser;
+	}
+	public void setMysqlUser(String mysqlUser) {
+		this.mysqlUser = mysqlUser;
+	}
+	public String getTrsPassword() {
+		return trsPassword;
+	}
+	public void setTrsPassword(String trsPassword) {
+		this.trsPassword = trsPassword;
+	}
+	public String getTrsServer() {
+		return trsServer;
+	}
+	public void setTrsServer(String trsServer) {
+		this.trsServer = trsServer;
+	}
+	public String getTrsUser() {
+		return trsUser;
+	}
+	public void setTrsUser(String trsUser) {
+		this.trsUser = trsUser;
+	}
+	public String getIsdataanalyse() {
+		return isdataanalyse;
+	}
+	public void setIsdataanalyse(String isdataanalyse) {
+		this.isdataanalyse = isdataanalyse;
+	}
+	 
+	public String getIsshowpolicy4child() {
+		return isshowpolicy4child;
+	}
+	public void setIsshowpolicy4child(String isshowpolicy4child) {
+		this.isshowpolicy4child = isshowpolicy4child;
+	}
+	public String getIstrsdynanic() {
+		return istrsdynanic;
+	}
+	public void setIstrsdynanic(String istrsdynanic) {
+		this.istrsdynanic = istrsdynanic;
+	}
+	public String getIsfilteruser() {
+		return isfilteruser;
+	}
+	public void setIsfilteruser(String isfilteruser) {
+		this.isfilteruser = isfilteruser;
+	} 
+	
+}

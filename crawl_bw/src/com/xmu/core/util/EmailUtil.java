@@ -1,0 +1,167 @@
+package com.xmu.core.util;
+
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.activation.DataHandler;
+import javax.mail.Authenticator;
+import javax.mail.BodyPart;
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Store;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
+
+public class EmailUtil {
+
+	public static boolean sendMail(String host,String from,String un,String pwd,String toMail, String title, String content)
+			throws Exception {
+
+//		String host = "facecity.cn";
+//		String from = "admin@facecity.cn";
+		String to = toMail; // �ʼ������˵��ʼ���ַ
+		final String username=un; //
+		final String password =pwd; // �����˵��ʼ�����
+		// ����Properties ����
+		Properties props = System.getProperties();
+		// ���smtp����������
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.auth", "true");
+		// �����ʼ��Ự
+		Session session = Session.getDefaultInstance(props,
+				new Authenticator() {
+					public PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(username, password);
+					}
+				});
+		try {
+			// 
+			MimeMessage message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(from));
+			message.addRecipient(Message.RecipientType.TO, new InternetAddress(
+					to));
+			message.setSubject(title);
+			Multipart mp = new MimeMultipart("related");
+			BodyPart bodyPart = new MimeBodyPart();// 正文
+			bodyPart.setDataHandler(new DataHandler(content,
+					"text/html;charset=GB2312"));// 网页格式
+			mp.addBodyPart(bodyPart);
+			message.setContent(mp);
+			session.getTransport("smtp").send(message);
+			System.out.println("SendMail Process Over!");
+
+		} catch (MessagingException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	public static int batchSendMail(String[] toMails, String title,
+			String content) {
+		int sendCount = 0; // 
+		String host = "facecity.cn"; // ����smtp������
+		String from = "admin@facecity.cn"; // �ʼ������˵��ʼ���ַ
+		final String username = "admin"; //
+		final String password = "facexm86"; // �����˵��ʼ�����
+		Properties props = System.getProperties();
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.auth", "true");
+		// �����ʼ��Ự
+		Session session = Session.getDefaultInstance(props,
+				new Authenticator() {
+					public PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(username, password);
+					}
+				});
+		for (String toMail : toMails) {
+			try {
+
+				if (toMail == null || "".equals(toMail)) {
+					continue;
+				}
+				MimeMessage message = new MimeMessage(session);
+				message.setFrom(new InternetAddress(from));
+				message.addRecipient(Message.RecipientType.TO,
+						new InternetAddress(toMail));
+				message.setSubject(title);
+				// message.setText(content);
+				Multipart mp = new MimeMultipart("related");
+				BodyPart bodyPart = new MimeBodyPart();// 正文
+				bodyPart.setDataHandler(new DataHandler(content,
+						"text/html;charset=GB2312"));// 网页格式
+				mp.addBodyPart(bodyPart);
+				message.setContent(mp);
+				session.getTransport("smtp").send(message);
+				System.out.println("SendMail Process Over!");
+				sendCount++;
+
+			} catch (MessagingException e) {
+				e.printStackTrace();
+				continue;
+			}
+		}
+		return sendCount;
+	}
+
+	// �����ʼ�
+	public static void getMail() {
+		String host = "facecity.cn";
+		final String username = "admin";
+		final String password = "facexm86";
+		Properties props = new Properties();
+		Session session = Session.getDefaultInstance(props,
+				new Authenticator() {
+					public PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(username, password);
+					}
+				});
+		try {
+			Store store = session.getStore("pop3");
+			store.connect(host, username, password);
+			Folder folder = store.getFolder("INBOX");
+			folder.open(Folder.READ_ONLY); // 
+			Message message[] = folder.getMessages();
+			for (int i = 0, n = message.length; i < n; i++) {
+				System.out.println(i + ": " + message[i].getFrom()[0] + "\t"
+						+ message[i].getSubject());
+				try {
+					message[i].writeTo(System.out);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+
+			folder.close(false);
+			store.close();
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		}
+		System.out.println("GetMail Process Over!");
+
+	}
+
+	// ��
+	public static String transferChinese(String strText) {
+		try {
+			strText = MimeUtility.encodeText(new String(strText.getBytes(),
+					"GB2312"), "GB2312", "B");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return strText;
+	}
+
+	public static void main(String[] args) throws Exception {
+		EmailUtil.sendMail("smtp.sina.com","8111030_cn@sina.com","8111030_cn","wojiushiwopico","285669662@qq.com", "kao,ceshi", "测试测试");
+		EmailUtil.getMail();
+	}
+}

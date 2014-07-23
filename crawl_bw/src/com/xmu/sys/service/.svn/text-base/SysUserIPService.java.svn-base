@@ -1,0 +1,12 @@
+package com.meiah.sys.service;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.meiah.core.service.BaseService;
+import com.meiah.sys.pojo.SysUserIP;
+
+public interface SysUserIPService  extends BaseService{
+
+	public SysUserIP setSysUserIP(SysUserIP user, String newIP);
+	public SysUserIP getSysUserIP(long  userid , HttpServletRequest request) ;
+}

@@ -1,0 +1,175 @@
+/*��ҳ��ʽ*/
+.pages-nav
+{
+    margin: 40px 0px;
+    
+  
+}
+.pages-nav a, .pages-nav span
+{
+    display: block;
+    float: left;
+    padding: 2px 5px;
+    margin-left: 4px;
+    height: 22px;
+}
+.pages-nav a, .pages-nav a:link, .pages-nav a:visited
+{
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #000;
+    text-decoration: none;
+}
+.pages-nav a:hover
+{
+    color: #000000;
+    background: #ECF4FD;
+    border: 1px solid #98C7F5;
+}
+.pages-nav span
+{
+    color: #999;
+}
+.pages-nav span.next
+{
+    color: #CCC;
+}
+.pages-nav .current
+{
+    font-weight: bold;
+    border: 2px solid #A9DAF7;
+    text-decoration: none;
+    color: #0673B5;
+    background: #A9DAF7;
+}
+.pages-nav .next
+{
+    padding: 2px;
+    background: #fff;
+    color: #000;
+    border: 1px solid #ddd;
+}
+.pages-nav .goto
+{
+    margin: 0px;
+    padding: 0px;
+}
+.pages-nav .goto input
+{
+    margin: 0px 2px;
+    padding: 0px;
+    background: #fff;
+    color: #000;
+    border: 1px solid #ddd;
+    height: 20px;
+}
+.pages-nav .text
+{
+    padding-top: 3px;
+    margin: 0px;
+    background: #F5F5F5;
+    color: #718EA5;
+    border: 0px solid #eee;
+    height:25px;
+}
+.pages-nav .text1
+{
+    padding-top: 3px;
+    margin: 0px;
+    background: #F5F5F5;
+    color: #718EA5;
+    border: 0px solid #eee;
+    height:25px;
+}
+/*- ҳǩʽҳ����ʽ--------------------------- */
+#tabs
+{
+    float: left;
+    width: 100%;
+    background: #FFFFFF;
+    line-height: normal;
+    overflow: hidden;
+    border-bottom: 0px solid #A4DBF2;
+}
+
+#tabs ul
+{
+    margin: 0;
+    padding: 5px 0px 0px 5px;
+    list-style: none;
+}
+
+#tabs li
+{
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+#tabs .a_link a
+{
+    background: url(  "../images/tableft.gif" ) no-repeat left top;
+    float: left;
+    margin: 0;
+    padding: 0 0 0 4px;
+    text-decoration: none;
+}
+
+#tabs .a_link a span
+{
+    float: left;
+    display: block;
+    background: url(  "../images/tabright.gif" ) no-repeat right top;
+    padding: 5px 15px 4px 6px;
+    color: #24618E;
+    cursor: hand;
+    height: 30px;
+    line-height:25px;
+}
+
+
+#tabs .a_hover a
+{
+    background: url(  "../images/tableft.gif" ) no-repeat left top;
+    float: left;
+    margin: 0;
+    padding: 0 0 0 4px;
+    background-position: 0% -84px;
+    text-decoration: none;
+}
+
+#tabs .a_hover a span
+{
+    float: left;
+    display: block;
+    background: url(  "../images/tabright.gif" ) no-repeat right top;
+    padding: 5px 15px 4px 6px;
+    background-position: 100% -84px;
+    color: #15428B;
+    font-weight:bold;
+    cursor: hand;
+    height: 30px;
+    line-height:25px;
+}
+#tabs .tab_over a
+{
+    background: url(  "../images/tableft.gif" ) no-repeat left top;
+    float: left;
+    margin: 0;
+    padding: 0 0 0 4px;
+    background-position: 0% -84px;
+    text-decoration: none;
+}
+#tabs .tab_over a span
+{
+    float: left;
+    display: block;
+    background: url(  "../images/tabright.gif" ) no-repeat right top;
+    padding: 5px 15px 4px 6px;
+    background-position: 100% -84px;
+    color: #FFF;
+    cursor: hand;
+    height: 30px;
+    line-height:25px;
+    color: #FFFFFF;
+}

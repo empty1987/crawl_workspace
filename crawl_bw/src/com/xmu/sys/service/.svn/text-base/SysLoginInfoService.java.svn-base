@@ -1,0 +1,7 @@
+package com.meiah.sys.service;
+
+import com.meiah.core.service.BaseService;
+
+public interface SysLoginInfoService extends BaseService {
+	public void deleteInfo();
+}

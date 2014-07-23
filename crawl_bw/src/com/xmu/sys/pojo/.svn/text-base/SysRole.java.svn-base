@@ -1,0 +1,66 @@
+package com.meiah.sys.pojo;
+
+import com.meiah.core.pojo.Entity;
+import com.meiah.core.util.Base64Utils;
+
+public class SysRole  extends Entity {
+
+
+    // Fields    
+
+     private static final long serialVersionUID = 1L;
+	private Long id;
+     private String name;
+     private String allowMenuId;
+
+
+    // Constructors
+
+    /** default constructor */
+    public SysRole() {
+    }
+
+    
+    /** full constructor */
+    public SysRole(Long id, String name, String allowMenuId) {
+        this.id = id;
+        this.name = name;
+        this.allowMenuId = allowMenuId;
+    }
+
+   
+    // Property accessors
+
+    public Long getId() {
+        return this.id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAllowMenuId() {
+        return this.allowMenuId;
+    }
+    
+    public void setAllowMenuId(String allowMenuId) {
+        this.allowMenuId = Base64Utils.decode(allowMenuId);
+    }
+   
+
+
+
+
+
+
+
+
+}

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="SysUsers">
+	<typeAlias alias="sysusers" type="com.xmu.sys.pojo.SysUsers" />
+	<typeAlias alias="task" type="com.xmu.sys.pojo.SysTask" />
+
+
+
+	<insert id="add" parameterClass="sysusers">
+		insert into
+		sysusers(password,username,addtime,role,flag)
+		values(#password#,#username#,now(),#role#,#flag#)
+	</insert>
+	<delete id="deleteUserById" parameterClass="java.lang.Long">
+		delete from sysusers
+		where id=#id#
+	</delete>
+	<select id="getUserById" parameterClass="java.lang.Long"
+		resultClass="sysusers">
+		select * from sysusers where id=#id#
+	</select>
+	
+	<update id="updateUser" parameterClass="sysusers">
+		update sysusers set username=#username#,role=#role#,flag=#flag#	where id=#id#
+	</update>
+
+	<insert id="addTask" parameterClass="task">
+		insert into task(url ,
+		userid , webtype,tname,addtime,ucookies) values (#url# , #userid# ,
+		#webtype# , #tname# , now() , #ucookies#)
+	</insert>
+	<select id="getLoginUser" parameterClass="sysusers" resultClass="sysusers">
+		select * from sysusers where password=#password# and
+		username=#username#
+	</select>
+
+
+
+	<sql id="includeComplex2">
+		<dynamic>
+			<isNotEmpty prepend="and" property="username">
+				<![CDATA[ username like '%$username$%'  ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="addtime_start">
+				<![CDATA[ addtime >= #addtime_start#  ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="addtime_end">
+				<![CDATA[ addtime <= #addtime_end#  ]]>
+			</isNotEmpty>
+		</dynamic>
+	</sql>
+
+	<select id="getUsersTotalCount" resultClass="java.lang.Integer"
+		parameterClass="sysusers">
+		select count(*) from sysusers  where 1=1
+		<include refid="includeComplex2" />
+
+	</select>
+	<select id="getUsersPageList" resultClass="sysusers" parameterClass="sysusers">
+		select * from sysusers where 1=1
+		<include refid="includeComplex2" />
+		ORDER BY $orderBy$ $order$
+		LIMIT #startNo# , #pageSize#
+	</select>
+
+
+
+
+
+
+
+	<sql id="includeComplex">
+		<dynamic>
+			<isNotEmpty prepend="and" property="tname">
+				<![CDATA[ tname like '%$tname$%'  ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="addtime_start">
+				<![CDATA[ addtime >= #addtime_start#  ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="addtime_end">
+				<![CDATA[ addtime <= #addtime_end#  ]]>
+			</isNotEmpty>
+		</dynamic>
+	</sql>
+
+	<select id="getTaskTotalCount" resultClass="java.lang.Integer"
+		parameterClass="task">
+		select count(*) from task where userid=#userid#
+		<include refid="includeComplex" />
+
+	</select>
+	<select id="getTaskPageList" resultClass="task" parameterClass="task">
+
+		select * from task where userid=#userid#
+		<include refid="includeComplex" />
+		ORDER BY $orderBy$ $order$
+		LIMIT #startNo# , #pageSize#
+	</select>
+
+
+	<delete id="deleteTaskById" parameterClass="java.lang.Long">
+		delete from task
+		where id=#id#
+	</delete>
+
+	<select id="getTaskById" parameterClass="java.lang.Long"
+		resultClass="task">
+		select * from task where id=#id#
+	</select>
+
+	<update id="updateTask" parameterClass="task">
+		update task set tname=#tname#,url=#url#,webtype=#webtype#
+		<isNotEmpty prepend="," property="ucookies">
+			ucookies=#ucookies#
+		</isNotEmpty>
+		where id=#id#
+	</update>
+
+
+
+
+
+
+
+
+</sqlMap>                                                                                                                                   

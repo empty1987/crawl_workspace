@@ -1,0 +1,199 @@
+
+package com.meiah.sys.pojo;
+
+import com.meiah.core.pojo.Entity;
+
+/**
+ * 
+ * @function  用户实体类 
+ * @author xujb
+ */
+
+public class SysUsers extends Entity {
+
+
+    // Fields    
+
+     private static final long serialVersionUID = 1L;
+	 private Long id;
+	
+     private String userName;
+     private String realName;
+     private String passWords;
+     private Long sysRole;
+     private String roleName; 
+     private String remark;
+     private Integer status; 
+     private Long depId;
+     private String depName;
+     private String ukeySerialNo;
+     private String email;
+     private String phone;
+     private String alerttype; 
+     private Long alertminitue;//单位分钟
+     private int isVlidMusic;
+     private int usertype;
+     private int pagestyle;
+     private String alive ; // 账号有效时间
+     
+     //也许的菜单操作
+     private String topMenuID;
+     private String topMenu;
+     
+
+ 
+	public String getTopMenu() {
+		return topMenu;
+	}
+	public void setTopMenu(String topMenu) {
+		this.topMenu = topMenu;
+	}
+	public String getTopMenuID() {
+		return topMenuID;
+	}
+	public void setTopMenuID(String topMenuID) {
+		this.topMenuID = topMenuID;
+	}
+	public String getAlive() {
+		return alive;
+	}
+	public void setAlive(String alive) {
+		this.alive = alive;
+	}
+	public int getPagestyle() {
+		return pagestyle;
+	}
+	public void setPagestyle(int pagestyle) {
+		this.pagestyle = pagestyle;
+	}
+	public int getUsertype() {
+		return usertype;
+	}
+	public void setUsertype(int usertype) {
+		this.usertype = usertype;
+	}
+	public String getUkeySerialNo() {
+		return ukeySerialNo;
+	}
+	public void setUkeySerialNo(String ukeySerialNo) {
+		this.ukeySerialNo = ukeySerialNo;
+	}
+	public String getRoleName() {
+		return roleName;
+	}
+	public void setRoleName(String roleName) {
+		this.roleName = roleName;
+	}
+	public String getDepName() {
+		return depName;
+	}
+	public void setDepName(String depName) {
+		this.depName = depName;
+	}
+	/** default constructor */
+    public SysUsers() {
+    } 
+	public Long getDepId() {
+		return depId;
+	}
+	public void setDepId(Long depId) {
+		this.depId = depId;
+	}
+	public Long getId() {
+        return this.id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+ 
+	
+    public String getUserName() {
+        return this.userName;
+    }
+    
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getRealName() {
+        return this.realName;
+    }
+    
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public String getPassWords() {
+        return this.passWords;
+    }
+    
+    public void setPassWords(String passWords) {
+        this.passWords = passWords;
+    }
+
+   
+
+    public String getRemark() {
+        return this.remark;
+    }
+    
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public Integer getStatus() {
+        return this.status;
+    }
+    
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+	public Long getSysRole() {
+		return sysRole;
+	}
+	public void setSysRole(Long sysRole) {
+		this.sysRole = sysRole;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public String getPhone() {
+		return phone;
+	}
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+	public Long getAlertminitue() {
+		return alertminitue;
+	}
+	public void setAlertminitue(Long alertminitue) {
+		this.alertminitue = alertminitue;
+	}
+	public String getAlerttype() {
+		return alerttype;
+	}
+	public void setAlerttype(String alerttype) {
+		this.alerttype = alerttype;
+	}
+	public int getIsVlidMusic() {
+		return isVlidMusic;
+	}
+	public void setIsVlidMusic(int isVlidMusic) {
+		this.isVlidMusic = isVlidMusic;
+	}
+	
+	 
+
+
+
+
+
+
+
+
+}

@@ -1,0 +1,123 @@
+package com.meiah.sys.pojo;
+
+
+/** 
+ *Copyright(C):	
+ *@n
+ *@n File:			Role.java
+ *@n Function:		用户实体类（用于登录）
+ *@n Author:		xjb整合	 2009-7-8
+ */
+
+public class UserSession {
+	
+	 
+	private static final long serialVersionUID = 1L;
+
+	private Long id ;      		//ID
+	
+	private String name ;		//姓名
+	
+	private String userName ;	//登录名
+	
+	private int isVlidMusic; //是否声音提醒报警信息
+	
+	private int usertype;	//所控群范围
+	
+	private int pagestyle; //页面信息
+ 	
+	private SysRole sysRole ;		//角色
+	
+	private SysDepartment sysDepartment;//角色
+	
+	private String topMenuID; //权限菜单
+	private String topMenu;
+	
+	
+ 
+	public String getTopMenu() {
+		return topMenu;
+	}
+
+	public void setTopMenu(String topMenu) {
+		this.topMenu = topMenu;
+	}
+
+	public String getTopMenuID() {
+		return topMenuID;
+	}
+
+	public void setTopMenuID(String topMenuID) {
+		this.topMenuID = topMenuID;
+	}
+
+	public SysDepartment getSysDepartment() {
+		return sysDepartment;
+	}
+
+	public void setSysDepartment(SysDepartment sysDepartment) {
+		this.sysDepartment = sysDepartment;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+ 
+	public SysRole getSysRole() {
+		return sysRole;
+	}
+
+	public void setSysRole(SysRole sysRole) {
+		this.sysRole = sysRole;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public int getIsVlidMusic() {
+		return isVlidMusic;
+	}
+
+	public void setIsVlidMusic(int isVlidMusic) {
+		this.isVlidMusic = isVlidMusic;
+	}
+
+	public int getUsertype() {
+		return usertype;
+	}
+
+	public void setUsertype(int usertype) {
+		this.usertype = usertype;
+	}
+
+	public int getPagestyle() {
+		return pagestyle;
+	}
+
+	public void setPagestyle(int pagestyle) {
+		this.pagestyle = pagestyle;
+	}
+ 
+	
+	
+	
+
+}

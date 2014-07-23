@@ -1,0 +1,120 @@
+package com.meiah.core.actions;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Date;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
+
+import com.meiah.core.exception.ServiceException;
+import com.meiah.core.util.ContextLookup;
+import com.meiah.monitor.service.MonitorService;
+
+public class DownloadFile extends HttpServlet {
+
+	private static final long serialVersionUID = 1L;
+
+	public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+		
+		String flag = StringUtils.trimToEmpty(request.getParameter("flag"));
+		
+		javax.servlet.ServletOutputStream out = response.getOutputStream();
+
+		String filepath = request.getRealPath("/") + "downLoad/";
+
+		String filename = StringUtils.trimToEmpty(request.getParameter("filename"));
+ 
+
+		File file = new File(filepath + filename+".csv");
+		
+		delOldFild(filepath);
+		
+		MonitorService monitorService = (MonitorService)getBean("monitorService"); 
+		if(StringUtils.equals("downloadAll",flag))
+		{
+			
+			filename = monitorService.writeToCsvFile4All();
+			if(StringUtils.isEmpty(filename))throw new ServiceException("找不到文件下载路径!");
+			file =  new File(filepath + filename);
+		}else{
+			
+			 try {
+				monitorService.writeToCsvFile(Long.valueOf(filename));
+			} catch (NumberFormatException e) {
+			 
+				e.printStackTrace();
+			} catch (Exception e) {
+				 
+				e.printStackTrace();
+			}
+			 filename = filename+".csv";
+		}		 
+		response.setContentType("text/html");
+ 
+		// 读取文件流
+
+		FileInputStream fileInputStream = new FileInputStream(file);
+
+		// 下载文件
+
+		// 设置响应头和下载保存的文件名
+
+		if (filename != null && filename.length() > 0) {
+
+			response.setContentType("application/x-msdownload");
+
+			response
+					.setHeader("Content-Disposition", "attachment; filename="
+							+ filename + "");
+
+			if (fileInputStream != null) {
+
+				int filelen = fileInputStream.available();
+
+				// 文件太大时内存不能一次读出,要循环
+
+				byte a[] = new byte[filelen];
+
+				fileInputStream.read(a);
+
+				out.write(a);
+
+			}
+
+			fileInputStream.close();
+
+			out.close();
+
+		}
+
+	}
+ 
+	private void delOldFild(String filePath) { 
+		File[] fs = new File(filePath).listFiles();
+		if(fs != null && fs.length >0){
+			 
+				for(int i=0;i<fs.length;i++){
+					if(fs[i].lastModified()<DateUtils.addDays(new Date(), -5).getTime()){
+							fs[i].delete();
+					 }
+				 } 
+		}
+		
+		
+	}
+
+	/**
+    *
+    * @function 获取bean
+    */ 
+	public Object getBean(String beanName) {
+		return ContextLookup.getBean(this.getServletContext(), beanName);
+	}
+}

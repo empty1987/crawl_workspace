@@ -1,0 +1,13 @@
+package com.meiah.sys.service.impl;
+
+import com.meiah.core.service.impl.BaseServiceImpl;
+import com.meiah.sys.service.SysLoginInfoService;
+
+public class SysLoginInfoServiceImpl extends BaseServiceImpl implements
+		SysLoginInfoService {
+
+	public void deleteInfo() {
+			removeObject("SysLoginInfo.delete", 1);
+	}
+
+}

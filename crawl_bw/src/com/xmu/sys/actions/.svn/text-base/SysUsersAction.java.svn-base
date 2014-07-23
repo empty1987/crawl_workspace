@@ -1,0 +1,667 @@
+/** 
+ *SysUsersAction.java 2009-11-25 xujb
+ */
+package com.meiah.sys.actions;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import com.googlecode.jsonplugin.annotations.JSON;
+import com.meiah.core.actions.BaseAction;
+import com.meiah.core.pojo.Page;
+import com.meiah.core.pojo.SystemParam;
+import com.meiah.core.util.Base64Utils;
+import com.meiah.core.util.Constants;
+import com.meiah.core.util.DateManager;
+import com.meiah.job.DataBaseSynJob;
+import com.meiah.pojo.PolicyShortParam;
+import com.meiah.sys.pojo.SysDepartment;
+import com.meiah.sys.pojo.SysUsers;
+import com.meiah.sys.pojo.UserSession;
+import com.meiah.sys.service.PoliceShortService;
+import com.meiah.sys.service.SysService;
+import com.meiah.sys.service.impl.SysServiceImpl;
+import com.opensymphony.xwork2.ModelDriven;
+
+/**
+ * @function 系统设置模块
+ * @author xujb
+ */
+public class SysUsersAction extends BaseAction implements ModelDriven<SysUsers> {
+
+	private static Logger logger = Logger.getLogger(SysUsersAction.class);
+
+	private static final long serialVersionUID = 1L;
+
+	private SysService sysService;
+
+	private PoliceShortService policyShortService;
+
+	private PolicyShortParam psp;
+
+	private SysUsers sysUsers = new SysUsers(); // 系统用户
+
+	private String tips = ""; // 提示消息
+
+	private String rand = ""; // 随机数
+
+	private String passwordOld = ""; // 原密码
+
+	private String passwordNew = "";// 新密码
+
+	private Long menuId; // 菜单ID
+
+	private List menu_list = new ArrayList(); // 菜单数据
+
+	private String sign = "";
+
+	private int deltime = 0; // 数据保存时间 单位天
+
+	private String tips4alarm = "";
+
+	private String userName;
+	private String password;
+	private String treeData; // 策略树形菜单数据字符串
+
+	public String getTreeData() {
+		return treeData;
+	}
+
+	public void setTreeData(String treeData) {
+		this.treeData = treeData;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	private SystemParam systemParam = new SystemParam();
+
+	private List<SysDepartment> sysDepartment_List = new ArrayList<SysDepartment>(); // 角色数据
+
+	public SysUsers getSysUsers() {
+		return sysUsers;
+	}
+
+	public void setSysUsers(SysUsers sysUsers) {
+		this.sysUsers = sysUsers;
+	}
+
+	/**
+	 * 
+	 * @function 登录
+	 * @return
+	 */
+	public String login() {
+
+		tips = sysService.login(getRequest(), sysUsers, rand, sign);
+
+		if (tips.length() > 0) {
+			if (tips.equals("validate") || tips.equals("proxy")) {
+				return "proxy";
+			} else
+				return "login2";
+		}
+		return "frame";
+	}
+
+	public String loginProxy() {
+		return "frame";
+	}
+
+	/**
+	 * 
+	 * @function 机器码
+	 * @return
+	 */
+	@JSON(serialize = false)
+	public String getmac() {
+
+		tips = Constants.MainServiceUser;
+		return "mac";
+	}
+
+	/**
+	 * @function 登陆随机数生成
+	 * @return
+	 */
+	public String preLogin() {
+
+		return "login";
+	}
+
+	/**
+	 * 
+	 * @function 登出
+	 * @return
+	 */
+	public String loginOut() {
+
+		try {
+			HttpSession session = getSession();
+			session.invalidate();
+		} catch (Exception e) {
+		}
+		return "login2";
+	}
+
+	/**
+	 * 
+	 * @function 登出
+	 * @return
+	 */
+	public String loginOut4bak() {
+
+		try {
+			HttpSession session = getSession();
+			session.invalidate();
+		} catch (Exception e) {
+		}
+
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 列表
+	 * @return String
+	 */
+	@SuppressWarnings("unchecked")
+	public String list() {
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		// 设置默认排序方式
+		if (!page.isOrderBySetted()) {
+			page.setOrderBy("id");
+			page.setOrder(Page.ASC);
+		}
+		if (usersession.getSysDepartment() != null) {
+			sysUsers.setDepName(usersession.getSysDepartment().getCode());
+		}
+		page = sysService.getPageList("SysUsers.getPageList",
+				"SysUsers.getTotalCount", sysUsers, page);
+		sysDepartment_List = sysService.getList("SysDepartment.getList4add",
+				usersession.getSysDepartment().getCode());
+		if (sysDepartment_List.size() > 0) {
+			SysDepartment firstDepartment = sysDepartment_List.get(0);
+			this.getRequest().setAttribute("firstDepartment", firstDepartment);
+		}
+		return "list";
+	}
+
+	/**
+	 * 
+	 * @function 保存
+	 * @return String
+	 */
+	public String edit() {
+		try {
+			 UserSession usersession =
+			 (UserSession)getSession().getAttribute(Constants.USERSESSION);
+			// System.out.println(usersession.getSysDepartment().getId());
+			sysUsers.setTopMenuID(Base64Utils.encode(sysUsers.getTopMenuID()));
+			if(sysUsers.getId() != null && usersession.getId() == sysUsers.getId()){
+				String topMenuID = sysUsers.getTopMenuID();
+				usersession.setTopMenuID(topMenuID);
+				StringBuffer sb = new StringBuffer();
+				if (topMenuID != null && !topMenuID.equals("")) {
+					String[] topMenuIDs = topMenuID.split(",");
+					for (String idStr : topMenuIDs) {
+						long id = Long.valueOf(idStr);
+						String name = (String)sysService. getObject("SysMenu.getMenuByID", id);
+						sb.append(name + ",");
+					}
+				}
+				String menu = sb.toString().substring(0 , sb.toString().length() - 1);
+				usersession.setTopMenu(menu);
+				getRequest().getSession().setAttribute(Constants.USERSESSION, usersession);
+			}
+			tips = sysService.saveSysUsers(sysUsers);
+
+		} catch (Exception e) {
+			logger.error("保存用户信息出错", e);
+			tips = "已经有人注册了该用户名，请重新输入用户名";
+		}
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 删除
+	 * @return String
+	 */
+	public String delete() {
+
+		sysService.removeObject("SysUsers.delete", sysUsers.getId());
+
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 获取信息
+	 * @return String
+	 */
+	@JSON(serialize = false)
+	public String getInfo() {
+		sysUsers = (SysUsers) sysService.getObject("SysUsers.getObj", sysUsers
+				.getId());
+		String topMenuID = Base64Utils.decode(sysUsers.getTopMenuID());
+		StringBuffer sb = new StringBuffer();
+		if (topMenuID != null && !topMenuID.equals("")) {
+			String[] topMenuIDs = topMenuID.split(",");
+			for (String idStr : topMenuIDs) {
+				long id = Long.valueOf(idStr);
+				String name = (String)sysService. getObject("SysMenu.getMenuByID", id);
+				sb.append(name + ",");
+			}
+		}
+		String menu = sb.toString().substring(0 , sb.toString().length() - 1);
+		sysUsers.setTopMenuID(topMenuID);
+		sysUsers.setTopMenu(menu);
+		sysUsers.setPassWords("");
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 修改密码
+	 * @return String
+	 */
+	public String preAlterPassword() {
+
+		return "alterPassword";
+	}
+
+	/**
+	 * 
+	 * @function 常见问题
+	 * @return String
+	 */
+	public String questionHelp() {
+
+		return "question";
+	}
+
+	/**
+	 * 
+	 * @function 版本信息
+	 * @return String
+	 */
+	public String versionMsg() {
+
+		return "versionmsg";
+	}
+
+	/**
+	 * 
+	 * @function 修改密码
+	 * @return String
+	 */
+	public String alterPassword() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		tips = sysService.savePassword(passwordOld, passwordNew, usersession);
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 框架main
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public String main() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		Map param = new HashMap();
+		Date today = new Date();
+		// 今日报警
+		param.put("beginTime", DateManager.formatDate(today));
+		param.put("sysUserId", usersession.getId());
+		param.put("depcode", usersession.getSysDepartment().getCode());
+		List todayshort = this.policyShortService.findByMap(param);
+		getRequest().setAttribute("todayshort", todayshort);
+		// 历史报警
+		param.clear();
+		param.put("sysUserId", usersession.getId());
+		param.put("depcode", usersession.getSysDepartment().getCode());
+		// param.put("endTime",
+		// DateManager.formatDate(DateManager.nextDate(today)));
+		List historyshort = this.policyShortService.findByMap(param);
+		getRequest().setAttribute("historyshort", historyshort);
+		getRequest().setAttribute("beginTime", DateManager.formatDate(today));
+		getRequest().setAttribute("endTime",
+				DateManager.formatDate(DateManager.nextDate(today)));
+		return "main";
+	}
+
+	public String findAlert() {
+		Map param = new HashMap();
+		Date today = new Date();
+		// 今日报警
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		param.put("beginTime", DateManager.formatDate(today));
+		param.put("SysUserId", usersession.getId());
+
+		Long alerts = this.policyShortService.findAlert(param);
+		if (alerts == null || alerts == 0) {
+			tips = "none";
+		} else {
+			tips = alerts.toString();
+			if (usersession.getIsVlidMusic() == 0)
+				tips = "none";
+		}
+
+		return JSON;
+	}
+
+	public String alertparam() {
+		// psp=(PolicyShortParam)this.policyShortService.getObject("SysAlarm.findParam");
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		// sysUsers.setId(usersession.getId());
+		sysUsers = (SysUsers) this.sysService.getObject("SysUsers.getObj",
+				usersession.getId());
+		return "param";
+	}
+
+	public String login2() {
+
+		return "login3";
+	}
+
+	public String init() {
+
+		if (StringUtils.equals(Constants.syspassword, SysServiceImpl
+				.encryptPWD(passwordOld))) {
+			if (StringUtils.endsWith(tips, "EDIT")) {
+				Constants.saveINI(systemParam);
+				tips = "success";
+			}
+			systemParam = new SystemParam();
+			return "init";
+		} else {
+			tips = "fail";
+			return "login3";
+		}
+	}
+
+	public String restart() {
+
+		String filePath = DataBaseSynJob.class.getResource("/").getPath()
+				.replaceAll("%20", " ").substring(1);
+		String commond = "cmd /c ";
+		Runtime run = Runtime.getRuntime();
+		commond += filePath + "restart.bat";
+		try {
+			run.exec(commond);
+		} catch (IOException e) {
+			logger.error("定时还原数据库失败!请检查" + filePath + "restart.bat文件中的配置");
+		}
+
+		return JSON;
+	}
+
+	public String updateSys() {
+
+		try {
+			tips = "更新成功！";
+			sysService.updateCode();
+		} catch (Exception e) {
+			tips = "更新失败，请检查数据库连接方式是否正确";
+		}
+		return JSON;
+	}
+
+	public String saveparam() {
+		this.sysService.saveObject("SysUsers.editParam", sysUsers);
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		usersession.setIsVlidMusic(sysUsers.getIsVlidMusic());
+		usersession.setPagestyle(sysUsers.getPagestyle());
+		getSession().setAttribute(Constants.USERSESSION, usersession);
+		return alertparam();
+	}
+
+	public String setsysparam() {
+
+		deltime = (Integer) sysService.getObject("SysUsers.getSysParam");
+
+		return "setparam";
+	}
+
+	public String savesysparam() {
+
+		sysService.saveObject("SysUsers.saveSysParam", deltime);
+		tips = "success";
+		return "setparam";
+	}
+
+	/**
+	 * 
+	 * @function 框架left
+	 * @return
+	 */
+	public String left() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		menu_list = sysService.getUserMenuList(usersession, menuId);
+		return "left";
+	}
+
+	/**
+	 * 
+	 * @function 框架top
+	 * @return
+	 */
+	public String top() {
+		// UserSession usersession =
+		// (UserSession)getSession().getAttribute(Constants.USERSESSION);
+		// menu_list = sysService.getUserMenuList(usersession,Long.valueOf(0));
+		tips = Constants.ISSSL;
+		return "top";
+	}
+
+	/**
+	 * 
+	 * @function 框架foot
+	 * @return
+	 */
+	public String foot() {
+
+		tips = Constants.ISCHECKCODE;
+		tips4alarm = Constants.ISALARM;
+		return "foot";
+	}
+
+	/**
+	 * @function 验证用户的正确性
+	 * @retur
+	 */
+
+	public String validateUser() {
+		tips = sysService.validateUser(userName, password);
+		return "validate";
+	}
+	
+	/**
+	 * 权限菜单限定
+	 * 
+	 */
+	public String topMenu(){
+		return "topMenu";
+	}
+
+	/**
+	 * @function 构建qqzone的树形菜单
+	 * @return
+	 */
+	public String leftQQ() {
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		treeData = sysService.getMenuData2(usersession, "0");
+		// tips = Constants.ISSHOWTYPE;
+		return "lefttype";
+	}
+
+	/**
+	 * @function 重置密码 ， 密码设为123456
+	 * @return
+	 */
+	public String resetPwd() {
+		sysUsers.setPassWords(SysServiceImpl.encryptPWD("123456"));
+		sysService.updateObject("SysUsers.resetPwd", sysUsers);
+		tips = "success";
+		return JSON;
+	}
+
+	/***************************************************/
+	// ognl 转换属性
+	@JSON(serialize = false)
+	public List getMenu_list() {
+		return menu_list;
+	}
+
+	public void setMenu_list(List menu_list) {
+		this.menu_list = menu_list;
+	}
+
+	public Long getMenuId() {
+		return menuId;
+	}
+
+	public void setMenuId(Long menuId) {
+		this.menuId = menuId;
+	}
+
+	public String getPasswordNew() {
+		return passwordNew;
+	}
+
+	public void setPasswordNew(String passwordNew) {
+		this.passwordNew = passwordNew;
+	}
+
+	public String getPasswordOld() {
+		return passwordOld;
+	}
+
+	public void setPasswordOld(String passwordOld) {
+		this.passwordOld = passwordOld;
+	}
+
+	public String getRand() {
+		return rand;
+	}
+
+	public void setRand(String rand) {
+		this.rand = rand;
+	}
+
+	public String getTips() {
+		return tips;
+	}
+
+	public void setTips(String tips) {
+		this.tips = tips;
+	}
+
+	public List<SysDepartment> getSysDepartment_List() {
+		return sysDepartment_List;
+	}
+
+	public void setSysDepartment_List(List<SysDepartment> sysDepartment_List) {
+		this.sysDepartment_List = sysDepartment_List;
+	}
+
+	/**
+	 * 实现接口ModelDriven方法
+	 */
+	public SysUsers getModel() {
+		return sysUsers;
+	}
+
+	/**
+	 * 
+	 * @function spring注入service接口方法
+	 * @param sysService
+	 *            void
+	 */
+	@JSON(serialize = false)
+	public void setSysService(SysService sysService) {
+		this.sysService = sysService;
+	}
+
+	public String getSign() {
+		return sign;
+	}
+
+	public void setSign(String sign) {
+		this.sign = sign;
+	}
+
+	@JSON(serialize = false)
+	public void setPolicyShortService(PoliceShortService policyShortService) {
+		this.policyShortService = policyShortService;
+	}
+
+	public PolicyShortParam getPsp() {
+		return psp;
+	}
+
+	public void setPsp(PolicyShortParam psp) {
+		this.psp = psp;
+	}
+
+	public int getDeltime() {
+		return deltime;
+	}
+
+	public void setDeltime(int deltime) {
+		this.deltime = deltime;
+	}
+
+	public SystemParam getSystemParam() {
+		return systemParam;
+	}
+
+	public void setSystemParam(SystemParam systemParam) {
+		this.systemParam = systemParam;
+	}
+
+	public String getTips4alarm() {
+		return tips4alarm;
+	}
+
+	public void setTips4alarm(String tips4alarm) {
+		this.tips4alarm = tips4alarm;
+	}
+
+}

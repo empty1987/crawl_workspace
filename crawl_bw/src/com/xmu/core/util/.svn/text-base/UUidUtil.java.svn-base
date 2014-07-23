@@ -1,0 +1,46 @@
+package com.meiah.core.util;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
+public class UUidUtil {
+//  �Դ����uuid���м���
+	 
+	public static String uuidEncode(String uuid) {
+		String key = "";
+		key = MD5Encrypt.getCurrentPwd("FI-2100" + uuid.toString());
+		key = key.toLowerCase().substring(8, 24);
+		return key;
+	}
+
+	
+	 //��ȡurl���ӵ�����
+	
+	public static String getUrlContent(String url) {
+		String result = "";
+		InputStream filecon = null;
+		DataInputStream filedata = null;
+		String fileline;
+
+		URL fileur;
+		try {
+			fileur = new URL(url);
+			filecon = fileur.openStream();
+			filedata = new DataInputStream(filecon);
+			while ((fileline = filedata.readLine()) != null) {
+				result = result + fileline;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			result = e.toString();
+		}
+		return result;
+	}
+	
+	public static void main(String[] args) {
+		String aa = UUidUtil.uuidEncode("01b07caf-fc0e-43aa-825b-b755372441f0") ;
+		System.out.println(aa);
+	}
+}

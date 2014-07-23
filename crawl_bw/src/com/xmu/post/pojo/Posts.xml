@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="Posts">
+	<typeAlias alias="post" type="com.xmu.post.pojo.Posts" />
+	
+	<select id="getPostsTotalCount" resultClass="java.lang.Integer"
+		parameterClass="post">
+		select count(*) from posts where tid=#tid#
+	</select>
+	<select id="getPostsPageList" resultClass="post" parameterClass="post">
+		select * from posts where tid=#tid#
+		order by dateline
+		LIMIT #startNo# , #pageSize#
+	</select>
+
+</sqlMap>                                                                                                                                   

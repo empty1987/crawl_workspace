@@ -1,0 +1,52 @@
+/** 
+  *TrsDao.java 2009-11-6 xujb
+  */
+package com.meiah.core.dao;
+
+import com.eprobiti.trs.TRSConnection;
+import com.eprobiti.trs.TRSException;
+import com.eprobiti.trs.TRSResultSet;
+
+/**
+ * @function   
+ * @author xujb
+ */
+public interface TrsDao {
+ 
+	/**
+	 * 
+	 * @function 获得Trs连接 不带参数返回静态连接，带参数返回动态连接，动态连接需要手动关闭连接
+	 * @param flag 
+	 * @return TRSConnection trs连接
+	 * @Exception
+	 */
+	public TRSConnection getTrsConn(int ...flag) ;
+	
+	/**
+	 * @function 关闭trs结果集和连接
+	 * @param TRSConnection 需要关闭的trs连接
+     * @param TRSResultSet  需要关闭的trs结果集
+	 */
+	public void close(TRSConnection trsconn, TRSResultSet trsrs) ;
+
+	/**
+	 * @function 关闭trs结果集和连接 
+     * @param TRSResultSet  需要关闭的trs结果集
+	 */
+	public void close(TRSResultSet trsrs) ;
+	/**
+	 * 
+	 * @function 执行查询返回结果集
+	 * @param trsconn trs连接
+	 * @param strSources 表名
+	 * @param strWhere 查询语句
+	 * @param strSortMethod 排序字段（+-符号在内）
+	 * @param defaultcolumn  默认检索字段
+	 * @return TRSResultSet 检索结果集
+	 * @Exception
+	 */
+	public TRSResultSet executeSelect(TRSConnection trsconn, String strSources, String strWhere, String strSortMethod, String defaultcolumn) throws TRSException ;
+ 
+		 
+}
+

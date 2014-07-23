@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="SysMenu">
+<typeAlias alias="sysMenu" type="com.meiah.sys.pojo.SysMenu" />
+<typeAlias alias="sysTopMenu" type="com.meiah.sys.pojo.SysTopMenu" />	   
+	<select id="getList4Cache" resultClass="sysMenu" >                                                                                           
+		select * from SysMenu order by sort                                                      
+	</select>  
+	<select id="getMenuByID" resultClass="java.lang.String" parameterClass="java.lang.Long" >                                                                                           
+		select name from SysTopMenu where id=#id#                                                     
+	</select>    
+</sqlMap>

@@ -1,0 +1,165 @@
+/** 
+  *SysService.java 2009-11-25 xujb
+  */
+package com.meiah.sys.service;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.meiah.core.service.BaseService;
+import com.meiah.sys.pojo.MyqqLoginInfo;
+import com.meiah.sys.pojo.SysDepartment;
+import com.meiah.sys.pojo.SysPolicyInfo;
+import com.meiah.sys.pojo.SysUsers;
+import com.meiah.sys.pojo.UserSession;
+
+/**
+ * @function   
+ * @author xujb
+ */
+public interface SysService extends BaseService {
+	
+	
+	/**
+	 * 
+	 * @function 登录验证
+	 * @param request 
+	 * @param sysUsers 用户实体类
+	 * @param rand 验证码
+	 * @param sign 
+	 * @return String  返回是否登录成功与错误提示
+	 */ 
+	String login(HttpServletRequest request, SysUsers sysUsers, String rand, String sign);
+
+	 
+	public SysUsers getUserById(Long id);
+	/**
+	 * 
+	 * @function 获取用户权限菜单
+	 * @param usersession 用户usersession
+	 * @param menuId 菜单ID
+	 * @return List  菜单列表
+	 */
+	List getUserMenuList(UserSession usersession, Long menuId);
+
+	/**
+	 * 
+	 * @function 保存用户信息
+	 * @param sysUsers 用户信息
+	 * @return String  操作提示
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 */
+	String saveSysUsers(SysUsers sysUsers) throws IllegalAccessException, InvocationTargetException;
+
+	/**
+	 * 
+	 * @function 修改密码
+	 * @param passwordOld 源密码
+	 * @param passwordNew 新密码 
+	 * @param usersession 用户信息
+	 * @return String 错误提示字符串
+	 */
+	String savePassword(String passwordOld, String passwordNew, UserSession usersession);
+
+	/**
+	 * 
+	 * @param l 
+	 * @function 获取全部策略类别列表
+	 * @return List
+	 */ 
+	List getAllTypes(Long l);
+
+
+	/**
+	 * 
+	 * @function 获取随机的一个验证码
+	 * @param id 登录信息ID
+	 * @param url 
+	 * @return MyqqLoginInfo 返回实体
+	 */
+	MyqqLoginInfo getRandomCheckCode(Long id, String url);
+
+
+	
+	/**
+	 * 
+	 * @function 保存验证码
+	 * @param myqqLoginInfo void
+	 * @param url 
+	 */
+	void saveCheckCode(MyqqLoginInfo myqqLoginInfo, String url);
+
+
+	/**
+	 * 
+	 * @function 保存myqq登录信息
+	 * @param myqqLoginInfo myqq登录信息
+	 * @return String
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 */
+	String saveMyqqLoginInfo(MyqqLoginInfo myqqLoginInfo) throws IllegalAccessException, InvocationTargetException;
+
+	/**
+	 * 
+	 * @function 查看是否有验证码
+	 * @return int
+	 */ 
+	int getCountCheckCode();
+
+
+	 
+
+	/**
+	 * 
+	 * @param sysDepartment 参数
+	 * @return SysDepartment
+	 * @throws Exception 
+	 */
+	SysDepartment saveDepartment(SysDepartment sysDepartment) throws Exception;
+
+
+	/**
+	 * 
+	 * @param id
+	 */
+	void deleteDepartment(Long id);
+
+	
+	/**
+	 * @function 获取树形数据
+	 * @param usersession
+	 * @return
+	 */
+	String getAllData(UserSession usersession);
+
+
+	/**
+	 * 
+	 * @functon 获取策略树形菜单
+	 * @param usersession 用户登录信息
+	 * @param flag 
+	 * @return 用户菜单
+	 */
+	String getMenuData(UserSession usersession, String flag);
+
+	public String getTypeData(UserSession usersession);
+
+
+	void savePolicy(SysPolicyInfo sysPolicy);
+
+
+	SysPolicyInfo getSysPolicy(SysPolicyInfo sysPolicy, UserSession usersession, String flag, String tips, String menuId);
+
+
+	void updateCode();
+	
+ public String validateUser(String userName , String password);
+
+ //构建qqzone树形菜单
+ public String getMenuData2(UserSession usersession, String flag); 
+ 
+}

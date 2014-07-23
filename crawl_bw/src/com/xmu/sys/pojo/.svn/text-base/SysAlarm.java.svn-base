@@ -1,0 +1,58 @@
+package com.meiah.sys.pojo;
+import com.meiah.core.pojo.Entity;
+public class SysAlarm  extends Entity { 
+
+     
+     private static final long serialVersionUID = 7812168485230400612L;
+	 private String phonenum;
+     private int alarmtype;
+     private int hour4alarm;
+     private String policyid;
+     private int status;
+     private String alarmname;
+     private String emailaddr;
+    
+     public String getEmailaddr() {
+		return emailaddr;
+	}
+	public void setEmailaddr(String emailaddr) {
+		this.emailaddr = emailaddr;
+	}
+	public void setPhonenum(String phonenum) {
+     this.phonenum = phonenum;
+     }
+     public String getPhonenum() {
+     return phonenum;
+     }
+     public void setAlarmtype(int alarmtype) {
+     this.alarmtype = alarmtype;
+     }
+     public int getAlarmtype() {
+     return alarmtype;
+     }
+     public void setHour4alarm(int hour4alarm) {
+     this.hour4alarm = hour4alarm;
+     }
+     public int getHour4alarm() {
+     return hour4alarm;
+     }
+     public void setPolicyid(String policyid) {
+     this.policyid = policyid;
+     }
+     public String getPolicyid() {
+     return policyid;
+     }
+     public void setStatus(int status) {
+     this.status = status;
+     }
+     public int getStatus() {
+     return status;
+     }
+     public void setAlarmname(String alarmname) {
+     this.alarmname = alarmname;
+     }
+     public String getAlarmname() {
+     return alarmname;
+     }
+
+}

@@ -1,0 +1,105 @@
+package com.meiah.sys.actions;											
+                                                                                                                            
+import com.meiah.core.actions.BaseAction;
+import com.meiah.core.util.Constants;
+import com.meiah.sys.pojo.SysAlarm;
+import com.meiah.sys.pojo.UserSession;
+import com.meiah.sys.service.SysService;
+import com.opensymphony.xwork2.ModelDriven;
+                                                                                                                            
+                                                                                  
+public class SysAlarmAction extends BaseAction implements ModelDriven<SysAlarm>{                                                    
+                                                                                                                            
+	private static final long serialVersionUID = -3385461053080157400L;
+
+	private SysAlarm sysalarm = new SysAlarm();   
+	private String treeData = "";
+	private String successUrl = "";
+                                                                                                                            
+	protected SysService sysService;                  
+	private String Flag;
+	                                                                                                
+                                                                                                                  
+	public String getFlag() {
+		return Flag;
+	}
+
+	public void setFlag(String flag) {
+		Flag = flag;
+	}
+
+	/**
+	 * 
+	 * @function 获取信息
+	 * @return String
+	 */ 
+	public String preEdit(){ 
+		if(sysalarm.getId() != null && sysalarm.getId() >0)
+			sysalarm = (SysAlarm)sysService.getObject("SysAlarm.getObj", sysalarm.getId()); 
+		UserSession usersession = (UserSession)getSession().getAttribute(Constants.USERSESSION); 
+		
+		treeData = sysService.getMenuData(usersession,Flag);
+		return "edit";
+	}                                                                                                                
+       
+	public String edit() {                                                                                                  
+		sysService.saveOrUpdateObject("SysAlarm.add", "SysAlarm.edit", sysalarm);  
+		successUrl = "/sys/actions/sys-alarm!list.action";
+		return "success";                                                                                                   
+	}                                                                                                                       
+                                                                                                                            
+	                                                                                         
+	public String list() {                                                                                           
+		page = sysService.getPageList("SysAlarm.getPageList",                                                              
+				"SysAlarm.getTotalCount", sysalarm, page);                                                              
+		return LIST;                                                                                                
+	}                                                                                                                       
+                                                                                                                            
+	public SysService getsysService() {                                                                                   
+		return sysService;                                                                                             
+	}                                                                                                                       
+                                                                                                                            
+	public void setsysService(SysService sysService) {                                                                   
+		this.sysService = sysService;                                                                                 
+	}                                                                                                                       
+                                                                                                                            
+	public SysAlarm getSysAlarm() {                                                                                                 
+		return sysalarm;                                                                                                    
+	}                                                                                                                       
+                                                                                                                            
+	public void setSysAlarm(SysAlarm sysalarm) {                                                                                        
+		this.sysalarm = sysalarm;                                                                                               
+	}                                                                                                                       
+                                                                                                                            
+                                                                                                                            
+	public SysAlarm getModel() {                                                                                                
+		                                                                                                                
+		return sysalarm;                                                                                                    
+	}
+
+	public String getTreeData() {
+		return treeData;
+	}
+
+	public void setTreeData(String treeData) {
+		this.treeData = treeData;
+	}
+
+	public String getSuccessUrl() {
+		return successUrl;
+	}
+
+	public void setSuccessUrl(String successUrl) {
+		this.successUrl = successUrl;
+	}
+
+	public SysAlarm getSysalarm() {
+		return sysalarm;
+	}
+
+	public void setSysalarm(SysAlarm sysalarm) {
+		this.sysalarm = sysalarm;
+	}                                                                                                                       
+                                                                                                                            
+                                                                                                                            
+}                                                                         

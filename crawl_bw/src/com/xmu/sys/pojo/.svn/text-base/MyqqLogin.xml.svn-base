@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">                                                                                                  
+<sqlMap namespace="MyqqLogin">                                                                                                                                    
+	<typeAlias alias="myqqlogin" type="com.meiah.sys.pojo.MyqqLoginInfo" />                                                                  
+                                                                                                                                            
+	                                                                                                                             
+    <!-- LAST_INSERT_ID()  -->                                                                                                                                     
+	<insert id="add" parameterClass="myqqlogin">                                                                              
+    		INSERT INTO MyqqLogin (Uin,Password,Status,Remark,Type,NickName,sendMessage) VALUES (#uin#,#password#,#status#,#remark#,#type#,#nickName#,#sendmessage#)
+    		<selectKey resultClass="java.lang.Long" keyProperty="id" >
+            	SELECT @@IDENTITY AS ID
+            </selectKey>
+	</insert>                                                                                                                               
+                                                                                                                                            
+	                                                                                                                             
+                                                                                                                                            
+	<update id="edit" parameterClass="myqqlogin">                                                                              
+    		UPDATE MyqqLogin SET Uin= #uin#,Password= #password#,CheckCodePic= #checkCodePic#,Status= #status#,Remark= #remark#,CheckCode= #checkCode#,Type= #type#,NickName= #nickName#,sendMessage= #sendmessage#  where ID=#id#
+	</update>                                                                                                                               
+	                                                                                                                                        
+	                                                                                                                     
+    <select id="getCountCheckCode" resultClass="java.lang.Integer" >                                                                                                  
+		select count(1) from MyqqLogin where (status=2 or status = 8) and CheckCodePic is not null                                                                                         
+	</select>  
+	
+	                                                                                                                                        
+	<delete id="delete" parameterClass="java.lang.Long">                                                                         
+		  DELETE FROM MyqqLogin where ID = #id#                                                                                            
+	</delete>                                                                                                                               
+                                                                                                                                            
+	<select id="getCheckCodeImage" resultClass="myqqlogin"  parameterClass="java.lang.Long">                                                                                                  
+		SELECT CheckCodePic FROM MyqqLogin WHERE ID =#id#                                                                                           
+	</select>                                                                                                                  
+                                                                                                                                            
+	<select id="getObj" resultClass="myqqlogin"  parameterClass="java.lang.Long">                                                                                                  
+		SELECT id,uin,password,status,remark,checkcode,type,nickName,sendMessage,sendMessagedate FROM MyqqLogin WHERE ID =#id#                                                                                           
+	</select>                                                                                                                               
+                                                                                                                                               
+	<select id="getRandomObj" resultClass="myqqlogin" >    
+		                                                                                              
+		SELECT id,uin,password,status,remark,checkcode,type,nickName,sendMessage,sendMessagedate FROM MyqqLogin WHERE  (status=2 or status = 8) and CheckCodePic is not null  LIMIT 0,100                                                                                        
+	</select>  
+	
+	                                                                                                           
+	<sql id="includeComplex">                                                                                                               
+		<dynamic>  
+		   <isNotEmpty prepend="and" property="uin">
+				<![CDATA[ uin = #uin# ]]>
+			</isNotEmpty> 
+			                                              
+		</dynamic>                                                                                                                      
+	</sql>                                                                                                                                  
+	                                                                                                                                        
+	                                                                                                                     
+	<select id="getTotalCount" resultClass="java.lang.Integer"                                                                             
+		parameterClass="myqqlogin">                                                                                    
+		SELECT COUNT(1) FROM MyqqLogin WHERE 1 = 1                                                                                       
+		<include refid="includeComplex" />                                                                                              
+	</select>                                                                                                                               
+	                                                                                                                               
+	 <select id="getPageList" resultClass="myqqlogin"                                                                                         
+		parameterClass="myqqlogin">                                                                                           
+		Select  id,uin,password,status,remark,checkcode,type,nickName,sendMessage,sendMessagedate,logindate FROM MyqqLogin where 1 = 1             
+		<include refid="includeComplex" /> 
+		ORDER BY $orderBy$ $order$                                                                                             
+		LIMIT #startNo# , #pageSize#                                                                    
+	</select>   
+	
+	<select id="getList" resultClass="myqqlogin"                                                                                         
+		parameterClass="myqqlogin">                                                                                           
+		Select  id,uin,password,status,remark,checkcode,type,nickName,sendMessage,sendMessagedate,logindate FROM MyqqLogin where 1 = 1             
+		                                                                 
+	</select>                                                                                                                              
+    
+    <select id="getNormalList" resultClass="myqqlogin"                                                                                         
+		parameterClass="myqqlogin">                                                                                           
+		Select  id,uin,password,status,remark,checkcode,type,nickName,sendMessage,sendMessagedate,logindate FROM MyqqLogin where 1 = 1 and type != 1            
+		                                                                 
+	</select>                                                                                                                          
+	                                                                                                                                        
+</sqlMap>                                                                                                                                   

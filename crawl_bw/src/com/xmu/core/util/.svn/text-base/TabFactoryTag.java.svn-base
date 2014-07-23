@@ -1,0 +1,148 @@
+package com.meiah.core.util;
+
+import javax.servlet.jsp.tagext.TagSupport;
+
+  
+/**
+ * 生成tab,需要引入tabs.css
+ * @author xujb 2010-11-12
+ *
+ */
+public class TabFactoryTag extends TagSupport{
+	
+   
+	private static final long serialVersionUID = 1L;
+	private static StringBuffer sb_tab_js = new StringBuffer(); //tab JS
+	 
+	private String tagNames; //tab菜单名
+	private String urls; //连接地址
+	private boolean isonestyle = false; //菜单样式是否多色 true 单色  false 多色
+	 
+	static{
+		
+		sb_tab_js.append("function switchTag(o){                                                                          \r\n");
+		sb_tab_js.append("var j = 1;                                                                                      \r\n");
+		sb_tab_js.append("for( var i=0; i<ids.length; i++){                                                               \r\n");
+		sb_tab_js.append("if(flag == 1)j = 1;                                                                             \r\n");
+		sb_tab_js.append(" else {                                                                                         \r\n");
+		sb_tab_js.append("	    j = ids[i] % 5;                                                                           \r\n");
+		sb_tab_js.append("	    if(j == 0)j=5;                                                                            \r\n");
+		sb_tab_js.append("    }                                                                                           \r\n");
+		sb_tab_js.append("  var curtag = document.getElementById(\"tag\"+ids[i]);                                         \r\n");
+		sb_tab_js.append("	if(curtag == null || curtag == 'undefined')continue;                                          \r\n");
+		sb_tab_js.append("	var tag_a = document.getElementById(\"tag\"+ids[i]).getElementsByTagName(\"a\")[0];           \r\n");
+		sb_tab_js.append("	if(tag_a == null || tag_a == 'undefined')continue;                                            \r\n");
+		sb_tab_js.append("	                                                                                              \r\n");
+		sb_tab_js.append("	if (\"tag\"+ids[i]==o.id){                                                                    \r\n");
+		sb_tab_js.append("		tag_a.blur();                                                                               \r\n");
+		sb_tab_js.append("		tag_a.className=\"selectli\"+j;                                                             \r\n");
+		sb_tab_js.append("		tag_a.getElementsByTagName(\"span\")[0].className=\"selectspan\"+j;                         \r\n");
+		sb_tab_js.append("		document.getElementById(\"content\"+ids[i]).className=\"\";                                 \r\n");
+		sb_tab_js.append("		document.getElementById(\"content\").className=\"content\"+j;                               \r\n");
+		sb_tab_js.append("		var curiframe = document.getElementById(\"iframe\"+ids[i]);                                 \r\n");
+		sb_tab_js.append("		if(curiframe == null || curiframe == 'undefined')                                           \r\n");
+		sb_tab_js.append("		   document.getElementById(\"content\"+ids[i]).innerHTML = '<iframe id=\"iframe'+ids[i]+ ");
+		sb_tab_js.append("		    '\" src=\"' + urls[i] + '\" frameborder=\"0\"    scrolling=\"yes\" style=\"width:98%;height:100%\"></iframe>';  \r\n");
+		sb_tab_js.append("	}else{                                                                                        \r\n");
+		sb_tab_js.append("		tag_a.className=\"\";                                                                       \r\n");
+		sb_tab_js.append("	    tag_a.getElementsByTagName(\"span\")[0].className=\"\";                                   \r\n");
+		sb_tab_js.append("		document.getElementById(\"content\"+ids[i]).className=\"hidecontent\";                      \r\n");
+		sb_tab_js.append("   }                                                                                            \r\n");
+		sb_tab_js.append("  }                                                                                             \r\n");
+		sb_tab_js.append("}                                                                                               \r\n");
+		
+	}
+	
+
+	
+	
+	public String creattab(){
+		
+		if(tagNames == null || urls == null || tagNames.length() == 0 || urls.length() == 0)return "";
+		
+		String[] tagNames_array = tagNames.split(",");
+		String[] urls_array = urls.split(",");
+		if(tagNames_array.length != urls_array.length || tagNames_array.length ==0)return "";
+		StringBuffer sb = new StringBuffer();
+		
+		
+		sb.append("<div id=\"container\">						                                  \r\n");	
+		sb.append("<div id=\"title\">                                                             \r\n");
+		sb.append("	<ul>                                                                          \r\n"); 
+		sb.append("		<li id=\"tag"+(isonestyle?6:1)+"\" onclick=\"switchTag(this);return false;\">          \r\n");
+		sb.append("			<a href=\"javascript: void(0);\" class=\"selectli1\">                 \r\n");
+		sb.append("       <span class=\"selectspan1\">"+tagNames_array[0]+"</span> </a>                   \r\n");
+		sb.append("		</li>                                                                     \r\n");
+		for(int i=1;i<tagNames_array.length;i++){ 
+		sb.append("		<li id=\"tag"+(isonestyle?6+i:1+i)+"\" onclick=\"switchTag(this);return false;\" >   \r\n");
+		sb.append("			<a href=\"javascript: void(0);\"> <span class=\"\">"+tagNames_array[i]+"</span> </a>\r\n");
+		sb.append("		</li>                                                                     \r\n");
+		}
+		sb.append("	</ul>                                                                         \r\n");
+		sb.append("</div>                                                                         \r\n");
+		sb.append("<div id=\"content\" class=\"content1\" style=\"height:96%;width:99%;\">                                        \r\n");
+		
+		sb.append("	<div id=\"content"+(isonestyle?6:1)+"\"></div>                                \r\n");
+		for(int i=1;i<tagNames_array.length;i++){
+		sb.append("	<div id=\"content"+(isonestyle?6+i:1+i)+"\" class=\"hidecontent\"></div>      \r\n");
+		}
+		sb.append("</div>                                                                         \r\n");
+		sb.append("</div>                                                                        \r\n");
+		sb.append("<script type=\"text/javascript\"> 											  \r\n");
+		
+		sb.append("var ids = new Array(															  \r\n");
+		for(int i=0;i<tagNames_array.length;i++){
+			sb.append(isonestyle?6+i:1+i);
+			if(i < tagNames_array.length-1)sb.append(",");
+		}
+		sb.append(");                                                                            \r\n");
+		sb.append("var urls = new Array(									 					 \r\n");
+		for(int i=0;i<urls_array.length;i++){
+			sb.append("'").append(urls_array[i]).append("'");
+			if(i < urls_array.length-1)sb.append(",");
+		} 
+		sb.append("	);                                                             				 \r\n");
+		sb.append("var flag = "+(isonestyle?1:0)+";                                              \r\n");
+	    sb.append(sb_tab_js);
+	    sb.append("switchTag(document.getElementById(\"tag"+(isonestyle?6:1)+"\"));             \r\n");
+		sb.append("</script>                                                                    \r\n");
+		return sb.toString();
+	    
+	}
+	 
+	 public int doStartTag() { 
+	       try{ 
+	    	   pageContext.getOut().write(creattab());
+
+	       }catch(Exception e){
+  
+	       }
+	       return SKIP_BODY;
+	    }
+
+	public boolean isIsonestyle() {
+		return isonestyle;
+	}
+
+	public void setIsonestyle(boolean isonestyle) {
+		this.isonestyle = isonestyle;
+	}
+
+	public String getTagNames() {
+		return tagNames;
+	}
+
+	public void setTagNames(String tagNames) {
+		this.tagNames = tagNames;
+	}
+
+	public String getUrls() {
+		return urls;
+	}
+
+	public void setUrls(String urls) {
+		this.urls = urls;
+	}
+ 
+	 
+}

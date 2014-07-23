@@ -1,0 +1,414 @@
+/** 
+ *SysUsersAction.java 2009-11-25 xujb
+ */
+package com.meiah.sys.actions;
+
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.googlecode.jsonplugin.annotations.JSON;
+import com.meiah.core.actions.BaseAction;
+import com.meiah.core.util.Constants;
+import com.meiah.sys.pojo.SysPolicyInfo;
+import com.meiah.sys.pojo.UserSession;
+import com.meiah.sys.service.SysService;
+import com.opensymphony.xwork2.ModelDriven;
+
+/**
+ * @function 系统设置模块
+ * @author xujb
+ */
+public class SysPolicyAction extends BaseAction implements
+		ModelDriven<SysPolicyInfo> {
+
+	private static final long serialVersionUID = 1L;
+
+	private SysService sysService;
+
+	private SysPolicyInfo sysPolicy = new SysPolicyInfo(); // 系统策略
+
+	private String tips = ""; // 提示消息
+
+	private Long id; // 策略ID
+
+	private String treeData; // 策略树形菜单数据字符串
+
+	private List<Object> types = new ArrayList<Object>(); // 类别
+
+	private String flag;
+
+	private String menuId;
+	private String policyMsg;
+	private String QQMsg;
+	private List menu_list = new ArrayList(); // 菜单数据
+
+	public List getMenu_list() {
+		return menu_list;
+	}
+
+	public void setMenu_list(List menuList) {
+		menu_list = menuList;
+	}
+
+	public String getQQMsg() {
+		return QQMsg;
+	}
+
+	public void setQQMsg(String qQMsg) {
+		QQMsg = qQMsg;
+	}
+
+	public String getPolicyMsg() {
+		return policyMsg;
+	}
+
+	public void setPolicyMsg(String policyMsg) {
+		this.policyMsg = policyMsg;
+	}
+
+	public String getMenuId() {
+		return menuId;
+	}
+
+	public void setMenuId(String menuId) {
+		this.menuId = menuId;
+	}
+
+	public String method;
+
+	public String getMethod() {
+		return method;
+	}
+
+	public void setMethod(String method) {
+		this.method = method;
+	}
+
+	public int refre;
+
+	public int getRefre() {
+		return refre;
+	}
+
+	public void setRefre(int refre) {
+		this.refre = refre;
+	}
+
+	/**
+	 * 
+	 * @function 列表
+	 * @return String
+	 */
+	@SuppressWarnings("unchecked")
+	public String list() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		sysPolicy.setSysUserId(usersession.getId());
+		page = sysService.getPageList("SysPolicy.getPageList",
+				"SysPolicy.getTotalCount", sysPolicy, page);
+		types = sysService.getAllTypes(usersession.getId());
+		return "list";
+	}
+
+	/**
+	 * 
+	 * @functon 修改
+	 * @return
+	 */
+	public String preEdit() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		sysPolicy = sysService.getSysPolicy(sysPolicy, usersession, flag, tips,
+				menuId);
+		types = sysService.getAllTypes(usersession.getId());
+		if (menuId.startsWith("type") && StringUtils.equals("edit", tips))
+			return "edittype";
+		return "edit";
+	}
+
+	/**
+	 * 
+	 * @functon 修改大类别
+	 * @return
+	 */
+	public String edittype() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		if (menuId.length() > 4) {
+			Map map = new Hashtable();
+			map.put("type", sysPolicy.getType());
+			sysPolicy = (SysPolicyInfo) sysService.getObject(
+					"SysPolicy.getObj", Long.valueOf(menuId.substring(4)));
+			sysPolicy.setSysUserId(usersession.getId());
+			map.put("sysUserId", usersession.getId());
+			map.put("oldType", sysPolicy.getType());
+			sysService.updateObject("SysPolicy.updateType", map);
+		}
+
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 保存
+	 * @return String
+	 */
+	public String edit() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		sysPolicy.setSysUserId(usersession.getId());
+		List<SysPolicyInfo> list = sysService.getList("SysPolicy.getSameName",
+				sysPolicy);
+		refre = sysPolicy.getIsQQ();
+		if (list.size() > 0) {
+			if (list.get(0).getId().equals(sysPolicy.getId())) {
+				sysService.savePolicy(sysPolicy);
+				tips = "success";
+			} else {
+				tips = "有相同的策略名在同一类别的大类里面！";
+			}
+		} else {
+
+			sysService.savePolicy(sysPolicy);
+			tips = "success";
+		}
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 删除
+	 * @return String
+	 */
+	public String delete() {
+		long policyId = sysPolicy.getId();
+		sysService.removeObject("SysPolicy.delete", policyId);
+		sysService.removeObject("PolicyShort.deleteChat", policyId);
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 删除
+	 * @return String
+	 */
+	public String deletex() {
+
+		Map map = new Hashtable();
+		if (menuId.startsWith("isQQ")) {
+			map.put("isQQ", menuId.substring(4));
+		} else if (menuId.startsWith("type")) {
+			map.put("type", menuId.substring(4));
+		} else if (menuId.startsWith("name")) {
+			map.put("name", menuId.substring(4));
+
+		}
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		map.put("sysUserId", usersession.getId());
+		sysService.removeObject("SysPolicy.deletex", map);
+		sysService.removeObject("PolicyShort.deletex", map);
+		tips = "success";
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @functon 策略树形菜单
+	 * @return String
+	 */
+	public String left() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		treeData = sysService.getMenuData(usersession, flag);
+		System.out.println("============================"+treeData);
+		tips = Constants.ISSHOWTYPE;
+		return "left";
+	}
+
+	public String lefttype() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+
+		treeData = sysService.getTypeData(usersession);
+		return "lefttype";
+	}
+
+	/**
+	 * 
+	 * @functon 策略树形菜单
+	 * @return String
+	 */
+	public String getPolicyData() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		treeData = sysService.getMenuData(usersession, flag);
+		return JSON;
+	}
+
+	/**
+	 * 
+	 * @function 获取信息
+	 * @return String
+	 */
+	@JSON(serialize = false)
+	public String getInfo() {
+		sysPolicy = (SysPolicyInfo) sysService
+				.getObject("SysPolicy.getObj", id);
+		if (sysPolicy != null && sysPolicy.getIsQQ() == 3) {
+			if (sysPolicy.getContent() != null
+					&& sysPolicy.getContent().length() > 0) {
+				String[] temp_a = sysPolicy.getContent().split("and");
+				if (temp_a != null && temp_a.length == 3) { // 确保事件聚焦时
+					// 内容字段符合规定。
+					sysPolicy.setAddr(StringUtils.trimToEmpty(temp_a[0]));
+					sysPolicy.setPersion(StringUtils.trimToEmpty(temp_a[1]));
+					sysPolicy.setEvent(StringUtils.trimToEmpty(temp_a[2]));
+				}
+			}
+		}
+		return JSON;
+	}
+
+	@JSON(serialize = false)
+	public String getGroupPolicy() {
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		sysPolicy.setSysUserId(usersession.getId());
+		StringBuffer sb = new StringBuffer();
+		List<SysPolicyInfo> list = sysService.getList(
+				"SysPolicy.getGroupIDPolicy", sysPolicy);
+		for (int i = 0; i < list.size(); i++) {
+			if (i < list.size() - 1) {
+				sb.append(list.get(i).getType()).append(",");
+			} else {
+				sb.append(list.get(i).getType());
+			}
+		}
+		policyMsg = sb.toString();
+		return JSON;
+	}
+
+	@JSON(serialize = false)
+	public String getQQPolicy() {
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		sysPolicy.setSysUserId(usersession.getId());
+		StringBuffer sb = new StringBuffer();
+		List<SysPolicyInfo> list = sysService.getList(
+				"SysPolicy.getQQIDPolicy", sysPolicy);
+		for (int i = 0; i < list.size(); i++) {
+			if (i < list.size() - 1) {
+				sb.append(list.get(i).getType()).append(",");
+			} else {
+				sb.append(list.get(i).getType());
+			}
+		}
+		QQMsg = sb.toString();
+		return JSON;
+	}
+
+	// 通过policyID获取policy详细信息
+	@JSON(serialize = false)
+	public String getPolicyInfo() {
+		SysPolicyInfo info = (SysPolicyInfo) sysService.getObject(
+				"SysPolicy.getObj", id);
+		StringBuffer sb = new StringBuffer();
+		sb.append("策略名称  :" + info.getName() + "<br>");
+		sb.append("策略类型  :" + info.getType() + "<br>");
+		sb.append("策略内容  :" + info.getContent() + "<br>");
+		sb.append("命中次数  :");
+		policyMsg = sb.toString();
+		return JSON;
+	}
+
+	public String hot() {
+
+		UserSession usersession = (UserSession) getSession().getAttribute(
+				Constants.USERSESSION);
+		menu_list = sysService.getUserMenuList(usersession, Long
+				.parseLong(menuId));
+		return "hot";
+	}
+
+	public void setSysPolicy(SysPolicyInfo sysPolicy) {
+		this.sysPolicy = sysPolicy;
+	}
+
+	public String getTips() {
+		return tips;
+	}
+
+	public void setTips(String tips) {
+		this.tips = tips;
+	}
+
+	/**
+	 * 实现接口ModelDriven方法
+	 */
+	@JSON(serialize = false)
+	public SysPolicyInfo getModel() {
+
+		return sysPolicy;
+	}
+
+	/**
+	 * 
+	 * @function spring注入service接口方法
+	 * @param sysService
+	 *            void
+	 */
+	@JSON(serialize = false)
+	public void setSysService(SysService sysService) {
+		this.sysService = sysService;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public List getTypes() {
+		return types;
+	}
+
+	public void setTypes(List types) {
+		this.types = types;
+	}
+
+	public String getTreeData() {
+		return treeData;
+	}
+
+	public void setTreeData(String treeData) {
+		this.treeData = treeData;
+	}
+
+	@JSON(serialize = false)
+	public SysPolicyInfo getSysPolicy() {
+		return sysPolicy;
+	}
+
+	public String getFlag() {
+		return flag;
+	}
+
+	public void setFlag(String flag) {
+		this.flag = flag;
+	}
+
+}

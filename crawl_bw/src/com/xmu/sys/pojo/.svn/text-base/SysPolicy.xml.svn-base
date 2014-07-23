@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="SysPolicy">
+	<typeAlias alias="syspolicy" type="com.meiah.sys.pojo.SysPolicyInfo" />
+
+
+
+	<insert id="add" parameterClass="syspolicy">
+		INSERT INTO SysPolicy
+		(Type,Name,Content,Scope,Status,IsQQ,sysUserId) VALUES
+		(#type#,#name#,#content#,#scope#,#status#,#isQQ#,#sysUserId#)
+	</insert>
+
+
+
+	<update id="edit" parameterClass="syspolicy">
+		UPDATE SysPolicy SET Type=
+		#type#,Name= #name#,Content=
+		#content#,Scope= #scope#,Status=
+		#status#,IsQQ=#isQQ# where
+		ID=#id#
+	</update>
+
+
+
+	<delete id="delete" parameterClass="java.lang.Long">
+		DELETE FROM SysPolicy where
+		ID = #id#
+	</delete>
+
+	<delete id="deletex" parameterClass="java.util.Hashtable">
+		<isNotEmpty prepend="" property="name">
+			<![CDATA[  DELETE FROM SysPolicy where ID = #name# ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="type">
+			<![CDATA[ DELETE a FROM syspolicy as a,syspolicy as b where    b.id=#type# and a.type=b.type and a.isQQ=b.isQQ and a.sysUserId = #sysUserId# ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="isQQ">
+			<![CDATA[  DELETE FROM SysPolicy where isQQ = #isQQ# and  sysUserId = #sysUserId#]]>
+		</isNotEmpty>
+
+	</delete>
+
+
+	<select id="getObj" resultClass="syspolicy" parameterClass="java.lang.Long">
+		SELECT * FROM SysPolicy WHERE ID =#id#
+	</select>
+
+
+
+	<sql id="includeComplex">
+		<dynamic>
+			<isGreaterThan prepend="and" property="sysUserId"
+				compareValue="0">
+				<![CDATA[ sysUserId = #sysUserId# ]]>
+			</isGreaterThan>
+			<isNotEmpty prepend="and" property="name">
+				<![CDATA[ name like '%$name$%' ]]>
+			</isNotEmpty>
+			<isGreaterThan prepend="and" property="isQQ"
+				compareValue="-1">
+				<![CDATA[ isQQ = #isQQ# ]]>
+			</isGreaterThan>
+		</dynamic>
+	</sql>
+
+
+
+	<select id="getSameName" resultClass="syspolicy" parameterClass="syspolicy">
+		select * from syspolicy where type=#type# and name=#name# and
+		isQQ=#isQQ#
+	</select>
+
+
+	<select id="getTotalCount" resultClass="java.lang.Integer"
+		parameterClass="syspolicy">
+		SELECT COUNT(1) FROM SysPolicy WHERE 1=1
+		<include refid="includeComplex" />
+	</select>
+
+
+	<select id="getPageList" resultClass="syspolicy" parameterClass="syspolicy">
+		Select * FROM SysPolicy where 1=1
+		<include refid="includeComplex" />
+		ORDER BY $orderBy$ $order$ LIMIT #startNo# , #pageSize#
+	</select>
+
+	<select id="getTypeList" resultClass="String" parameterClass="java.lang.Long">
+		select distinct type from SysPolicy where sysuserid=#sysuserid#
+	</select>
+
+	<select id="getList4Menu" resultClass="syspolicy"
+		parameterClass="java.util.Hashtable">
+		select id,type,name,isQQ,content from SysPolicy where status = 1
+		and
+		SysUserId=#sysUserId#
+		<isNotEmpty prepend="and" property="flag">
+				<![CDATA[ isQQ = #flag# ]]>
+		</isNotEmpty>
+		order by isQQ,type,name,id
+	</select>
+
+	<select id="getList4Menux" resultClass="syspolicy"
+		parameterClass="java.lang.String">
+
+		<![CDATA[ 
+	
+	  select 
+		 p.*,u.realName as userName
+		 from syspolicy as  p ,sysusers as u,sysdepartment as d where 
+		 p.sysuserid =  u.id and u.DepId=d.id and u.status=1
+		 and d.code LIKE '$code$%' and d.code <> #code# and POSITION('-' in SUBSTRING_INDEX(d.code,concat(#code#,"-"),-1))=0
+	  order by p.sysuserid,p.isQQ,p.type,p.name,p.id
+	 ]]>
+
+	</select>
+
+
+	<select id="getExList" resultClass="syspolicy" parameterClass="java.util.Hashtable">
+		select isQQ,name,content from SysPolicy as a where status = 1
+		and
+		sysuserid=#sysuserid#
+		<dynamic>
+			<isNotEmpty prepend="and" property="isQQ">
+				<![CDATA[ 
+					a.isQQ=#isQQ#
+					 ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="type">
+				<![CDATA[ 
+					exists (select 1 from SysPolicy as b where id=#type# and a.type=b.type and a.isQQ=b.isQQ)
+					  
+					 ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="name">
+				<![CDATA[ 
+						id = #name# 
+					 ]]>
+			</isNotEmpty>
+		</dynamic>
+		order by isQQ
+	</select>
+
+	<select id="policyShort" resultClass="syspolicy" parameterClass="java.util.Map">
+
+		select count(1) as scope,b.id as id,b.name as name from
+		policyshort a
+		,syspolicy b where a.policyid=b.id and
+		b.SysUserId=#sysUserId#
+		<isNotEmpty prepend="and" property="beginTime">
+			<![CDATA[ 
+					a.savetime>=#beginTime#
+					 ]]>
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="endTime">
+			<![CDATA[ 
+					a.savetime<#endTime#
+					 ]]>
+		</isNotEmpty>
+		group by a.policyid,b.name
+	</select>
+
+	<select id="findAlert2" resultClass="syspolicy" parameterClass="java.util.Map">
+		select count(1) as scope ,b.SysUserId as id from policyshort a
+		left
+		outer join syspolicy b on a.policyid=b.id where
+		a.savetime>=#beginTime# and a.AlertStatus=0 group by b.SysUserId
+	</select>
+
+	<select id="findAlert" resultClass="java.lang.Long"
+		parameterClass="java.util.Map">
+		select count(1) as count from policyshort a left outer
+		join
+		syspolicy b on a.policyid=b.id where b.SysUserId=#SysUserId# and
+		a.savetime>=#beginTime# and (a.AlertStatus=0 or a.AlertStatus is
+		null)
+
+	</select>
+
+	<update id="updateAlert" parameterClass="java.util.Map">
+		update policyshort set
+		AlertStatus=1 where policyid in( select
+		b.id from syspolicy b where
+		policyshort.policyId=b.id and
+		b.SysUserId=#SysUserId# ) and
+		savetime>=#beginTime# and (
+		AlertStatus=0 or AlertStatus is null)
+
+	</update>
+
+	<update id="updateType" parameterClass="java.util.Hashtable">
+
+		update syspolicy set Type = #type# where type = #oldType# and sysUserId =
+		#sysUserId#
+	
+	</update>
+
+	<select id="getGroupPolicy" resultClass="syspolicy"
+		parameterClass="java.lang.Long">
+		select * from SysPolicy as s where s.isQQ = 2 and
+		s.sysUserId = #sysUserId#
+	</select>
+
+	<select id="getQQPolicy" resultClass="syspolicy" parameterClass="java.lang.Long">
+		select * from SysPolicy as s where s.isQQ = 1 and s.sysUserId =
+		#sysUserId#
+	</select>
+
+	<select id="getGroupIDPolicy" resultClass="syspolicy"
+		parameterClass="syspolicy">
+		select * from SysPolicy as s where s.isQQ= 2 and
+		s.name=#name# and s.sysUserId = #sysUserId#
+	</select>
+	<select id="getQQIDPolicy" resultClass="syspolicy"
+		parameterClass="syspolicy">
+		select * from SysPolicy as s where s.isQQ= 1 and
+		s.name=#name# and s.sysUserId = #sysUserId#
+	</select>
+
+	<select id="getPolicyByID" resultClass="syspolicy"
+		parameterClass="java.lang.Long">
+		select * from SysPolicy as s where s.ID = #id#	
+	</select>
+
+
+</sqlMap>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">                                                                                                  
+<sqlMap namespace="SysLogs">                                                                                                                                    
+	<typeAlias alias="syslogs" type="com.meiah.sys.pojo.SysLogs" />                                                                  
+                                                                                                                                            
+	                                                                                                                             
+                                                                                                                                            
+	<insert id="add" parameterClass="syslogs">                                                                              
+    		INSERT INTO SysLogs (userId,Time,OpType,Detail,ipAddr) VALUES (#userid#,#time#,#optype#,#detail#,#ipAddr#)
+	</insert>                                                                                                                                  
+	<update id="edit" parameterClass="syslogs">                                                                              
+    		UPDATE SysLogs SET userid= #userid#,Time= #time#,OpType= #optype#,Detail= #detail#,ipAddr=#ipAddr#  where ID=#id#
+	</update>                                                                                                                        
+                                                                                                                                            
+	<delete id="delete" parameterClass="java.lang.Long">                                                                         
+		  DELETE FROM SysLogs where ID = #id#                                                                                            
+	</delete>                                                                                                                               
+                                                                                                                                            
+	                                                                                                                   
+                                                                                                                                            
+	<select id="getObj" resultClass="syslogs"                                                                                         
+		parameterClass="java.lang.Long">                                                                                                  
+		SELECT * FROM SysLogs WHERE ID =#id#                                                                                           
+	</select>                                                                                                                               
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                            
+	<sql id="includeComplex">                                                                                                               
+		<dynamic>                                                                                                                       
+			<isNotEmpty prepend="and" property="userName">
+				<![CDATA[ userId in (select id from sysusers where userName like '%$userName$%') ]]>
+			</isNotEmpty> 
+			<isNotEmpty prepend="and" property="timeStart">
+				<![CDATA[ time >= #timeStart# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="timeEnd">
+				<![CDATA[ time <= #timeEnd# ]]>
+			</isNotEmpty>
+			<isGreaterThan prepend="and" compareValue="0" property="optype">
+				<![CDATA[ optype =#optype#  ]]>
+			</isGreaterThan> 
+			<isNotEmpty prepend="and" property="detail">
+				<![CDATA[ detail like '%$detail$%' ]]>
+			</isNotEmpty>
+                                                                              
+		</dynamic>                                                                                                                      
+	</sql>                                                                                                                                  
+	                                                                                                                                        
+	                                                                                                                             
+	                                                                                                                         
+      <select id="getTotalCount" resultClass="java.lang.Integer"                                                                             
+		parameterClass="syslogs">                                                                                    
+		SELECT COUNT(1) FROM SysLogs WHERE 1 = 1                                                                                       
+		<include refid="includeComplex" />                                                                                              
+	</select>                                                                                                                               
+	                                                                                                                                        
+	                                                                                                                        
+	<select id="getPageList" resultClass="syslogs"                                                                                         
+		parameterClass="syslogs">                                                                                           
+		 
+		Select SysLogs.*,sysusers.userName as userName FROM SysLogs,sysusers where SysLogs.userId = sysusers.id           
+		<include refid="includeComplex" /> 
+		ORDER BY $orderBy$ $order$                                                                                             
+		LIMIT #startNo# , #pageSize#                      
+	</select>                                                                                                                              
+	                                                                                                                                        
+</sqlMap>                                                                                                                                   

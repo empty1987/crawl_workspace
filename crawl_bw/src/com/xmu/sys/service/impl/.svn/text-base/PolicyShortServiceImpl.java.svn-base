@@ -1,0 +1,24 @@
+package com.meiah.sys.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import com.meiah.core.service.impl.BaseServiceImpl;
+import com.meiah.sys.service.PoliceShortService;
+
+public class PolicyShortServiceImpl extends BaseServiceImpl implements
+		PoliceShortService {
+
+	public List findByMap(Map param) {
+		
+		return  this.getList("SysPolicy.policyShort", param);
+	}
+
+	public Long findAlert(Map param) {	 
+		Long l= (Long) this.getObject("SysPolicy.findAlert", param);
+		this.getBaseDao().getTemplete().update("SysPolicy.updateAlert",param);
+		return l;
+	}
+	
+	 
+}

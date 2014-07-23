@@ -1,0 +1,94 @@
+package com.meiah.core.actions; 
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts2.ServletActionContext;
+
+import com.googlecode.jsonplugin.annotations.JSON;
+import com.meiah.core.pojo.Page;
+import com.meiah.core.util.ContextLookup;
+import com.opensymphony.xwork2.ActionSupport;
+
+/** 
+ *Copyright(C):	
+ *@n
+ *@n File:			BaseAction.java
+ *@n Function:		struts2 baseAction 整合
+ *@n Author:		xjb整合	 2009-7-1
+ */
+ 
+public class BaseAction extends ActionSupport{
+ 
+	private static final long serialVersionUID = 1L;
+	 
+	public static final String LIST = "list" ; //分页列表
+	public static final String JSON = "json" ; //分页列表
+	
+	public Page page = new Page();             // 分页参数封装  
+	 
+	
+	
+    
+	/************* 取得Request/Response/Session的简化函数 **************/
+	/**
+	 * 取得HttpSession的简化函数.
+	 */
+	@JSON(serialize=false)
+	public static HttpSession getSession() {
+		 
+		return ServletActionContext.getRequest().getSession();
+	}
+
+	/**
+	 * 取得HttpRequest的简化函数.
+	 */
+	@JSON(serialize=false)
+	public static HttpServletRequest getRequest() {
+		return ServletActionContext.getRequest();
+	}
+
+	/**
+	 * 取得HttpResponse的简化函数.
+	 */
+	@JSON(serialize=false)
+	public static HttpServletResponse getResponse() {
+		return ServletActionContext.getResponse();
+	}
+
+	/**
+	 * 取得Request Parameter的简化方法.
+	 */
+	@JSON(serialize=false)
+	public static String getParameter(String name) {
+		return getRequest().getParameter(name);
+	}
+	
+	/**
+    *
+    * @function 获取bean
+    */ 
+	public Object getBean(String beanName) {
+		return ContextLookup.getBean(ServletActionContext.getServletContext(), beanName);
+	}
+	
+	
+ 
+	/**
+	 * 获取Object 类名称
+	 */  
+	@JSON(serialize=false)
+	public static String getClassName(Object obj) {
+		return obj.getClass().getName();
+	}
+	@JSON(serialize=false)
+	public Page getPage() {
+		return page;
+	} 
+	
+	public void setPage(Page page) {
+		this.page = page;
+	}
+}
+ 

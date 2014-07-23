@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">                                                                                                  
+<sqlMap namespace="SysUsers">                                                                                                                                    
+	<typeAlias alias="sysusers" type="com.meiah.sys.pojo.SysUsers" />                                                                  
+                                                                                                                                            
+	                                                                                                                             
+                                                                                                                                            
+	<insert id="add" parameterClass="sysusers">                                                                              
+    		INSERT INTO SysUsers (UserName,RealName,SysRole,Remark,Status,PassWords,DepId,ukeySerialNo,email,phone,usertype,alive,topMenuID) VALUES (#userName#,#realName#,#sysRole#,#remark#,#status#,#passWords#,#depId#,#ukeySerialNo#,#email#,#phone#,#usertype#,#alive#,#topMenuID#)
+	</insert>                                                                                                                               
+    <insert id="saveSysParam" parameterClass="java.lang.Integer">                                                                              
+    		update sysparam set deltime=#deltime# 
+	</insert>  
+	<select id="getFilePath" resultClass="java.lang.String">
+		select snapshotPath from sysparam limit 0 , 1
+	</select>
+	
+	                                                                                                                                  
+	<select id="getSysParam" resultClass="java.lang.Integer">                                                                              
+    		 select deltime from  sysparam   limit 0,1
+	</select>                                                                                                                          
+                                                                                                                                            
+	<update id="edit" parameterClass="sysusers">                                                                              
+    		UPDATE SysUsers SET UserName= #userName#,RealName= #realName#,SysRole= #sysRole#,Remark= #remark#,Status= #status#,DepId= #depId#,ukeySerialNo=#ukeySerialNo#,email=#email#,phone=#phone#,usertype=#usertype# ,alive=#alive#,topMenuID=#topMenuID# where ID=#id#
+	</update>               
+	                                                                                                                
+	<update id="editqqgroupmonitor" parameterClass="sysusers">                                                                              
+    		UPDATE qqgroupmonitor set depcode = (select code from sysdepartment where id= #depId#) where sysUsersId = #id# 
+	</update>          
+	                                                                                                                            
+	 <update id="editUsbkeySerialnumber" parameterClass="sysusers">                                                                              
+    		UPDATE SysUsers SET ukeySerialNo = #ukeySerialNo#  where ID=#id#
+	</update>         
+	                
+	 <update id="resetPwd" parameterClass="sysusers">                                                                              
+    		UPDATE SysUsers SET PassWords = #passWords#  where ID=#id#
+	</update>         
+	             
+	                                                                                                              
+	<delete id="delete" parameterClass="java.lang.Long">                                                                         
+		<![CDATA[  DELETE FROM SysUsers where ID = #id#  and userName <> 'admin'    ]]>                                                                                     
+	</delete>  
+	
+	<!-- 删除用户时，同时删除它自己的策略 -->
+	<delete id="deletePolicy" parameterClass="java.lang.Long">
+		delete from SysPolicy where sysUserId = #id# 
+	</delete>
+	  
+	<update id="deleteQQgroupmonitor" parameterClass="java.lang.Long">                                                                         
+		<![CDATA[  
+		UPDATE QQGROUPMONITOR SET FLAGDEL = -1 where SysUsersId = #id# 
+		 ]]>                                                                                     
+	</update>     
+	
+	                                                                                                                         
+                                                                                                                                            
+	 <select id="getObjByloginAndPassword" resultClass="sysusers"
+		parameterClass="java.util.Hashtable">
+		SELECT * FROM SysUsers WHERE  userName = #userName#  
+		<isNotEmpty prepend="and" property="passWords">
+				 passWords = #passWords#
+		</isNotEmpty>
+		LIMIT 0,1
+	</select>        
+	
+	<update id="editPassword" parameterClass="sysusers">
+		UPDATE SysUsers SET passWords = #passWords#  where ID=#id#
+	</update>
+	
+	<update id="editParam" parameterClass="sysusers">
+	UPDATE SysUsers SET email = #email# 
+	,phone = #phone# ,alerttype = #alerttype# ,alertminitue = #alertminitue#,isVlidMusic=#isVlidMusic#,pagestyle=#pagestyle#
+	 where ID=#id#
+	</update>
+	                                                                                                          
+                                                                                                                                            
+	<select id="getObj" resultClass="sysusers"                                                                                         
+		parameterClass="java.lang.Long">                                                                                                  
+		SELECT * FROM SysUsers WHERE ID =#id#                                                                                           
+	</select>   
+	
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                            
+	<sql id="includeComplex">                                                                                                               
+		<dynamic>                                                                                                                       
+            <isNotEmpty prepend="and" property="userName">
+				<![CDATA[ userName like '%$userName$%' ]]>
+			</isNotEmpty> 
+			<isNotEmpty prepend="and" property="realName">
+				<![CDATA[ realName like '%$realName$%' ]]>
+			</isNotEmpty>
+		</dynamic>                                                                                                                      
+	</sql>                                                                                                                                  
+	                                                                                                                                        
+	                                                                                                                     
+	<select id="getTotalCount" resultClass="java.lang.Integer"                                                                             
+		parameterClass="sysusers">                                                                                    
+		Select count(*) from (
+		Select * FROM SysUsers where 1 = 1             
+		<include refid="includeComplex" /> 
+		ORDER BY $orderBy$ $order$                                                                                             
+		) as  a ,  SysRole as b ,SysDepartment as c
+		where a.sysRole = b.id and a.depid = c.id  and c.code  like '%$depName$%'                                                                                        
+	</select>                                                                                                                               
+	                                                                                                                                        
+	                                                                                                                        
+	<select id="getPageList" resultClass="sysusers"                                                                                         
+		parameterClass="sysusers">                                                                                           
+		Select a.*,b.name as roleName,c.name as depName from (
+		Select * FROM SysUsers where 1 = 1             
+		<include refid="includeComplex" /> 
+		ORDER BY $orderBy$ $order$                                                                                             
+		LIMIT #startNo# , #pageSize#  
+		) as  a ,  SysRole as b ,SysDepartment as c
+		where a.sysRole = b.id and a.depid = c.id  and c.code  like '%$depName$%'                                                       
+	</select>                                                                                                                               
+	                                                                                                                         
+                                                                                                                                            
+	                                                                                                                                        
+</sqlMap>                                                                                                                                   

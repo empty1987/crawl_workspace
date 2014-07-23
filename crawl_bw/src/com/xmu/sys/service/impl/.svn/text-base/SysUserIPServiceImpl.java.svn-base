@@ -1,0 +1,42 @@
+package com.meiah.sys.service.impl;
+
+import java.sql.Timestamp;
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.meiah.core.service.impl.BaseServiceImpl;
+import com.meiah.sys.pojo.SysUserIP;
+import com.meiah.sys.service.SysUserIPService;
+
+public class SysUserIPServiceImpl extends BaseServiceImpl implements SysUserIPService {
+
+//	通过ID得到用户IP信息
+	public SysUserIP getSysUserIP(long userid , HttpServletRequest request) {
+		SysUserIP user = (SysUserIP) getObject("SysUserIP.getUserIP", userid);
+		if(user == null)
+			return null;
+		else
+		{
+			String newIP = request.getRemoteHost();
+			user.setNewIP(newIP);
+			if(newIP.equals(user.getIp()))
+				user.setSime(true);
+			else
+				user.setSime(false);			
+			return user;
+		}
+	}
+	
+//对比IP，更新IP信息
+	public SysUserIP setSysUserIP(SysUserIP user, String newIP) {
+		
+		String oldIP = user.getIp();
+		boolean isSime = oldIP.equals(newIP);
+		user.setSime(isSime);
+		user.setEtime(new Timestamp(new Date().getTime()));
+		user.setIp(newIP);
+		return user;
+	}
+
+}

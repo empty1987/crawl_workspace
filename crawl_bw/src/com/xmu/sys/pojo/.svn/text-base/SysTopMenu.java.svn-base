@@ -1,0 +1,43 @@
+package com.meiah.sys.pojo;
+
+import com.meiah.core.pojo.Entity;
+
+/** 
+ *Copyright(C):	
+ *@n
+ *@n File:			TopMenu.java
+ *@n Function:		菜单实体类
+ *@n Author:		xjb整合	 2009-7-7
+ */
+
+public class SysTopMenu extends Entity{
+	
+	 
+		private static final long serialVersionUID = 1L;
+
+		private Long id;        //id
+	    
+	      
+	    private String name;   //菜单名
+
+
+		public Long getId() {
+			return id;
+		}
+
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+
+		public String getName() {
+			return name;
+		}
+
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+}

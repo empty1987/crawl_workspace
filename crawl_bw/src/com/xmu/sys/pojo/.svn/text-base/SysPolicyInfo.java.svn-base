@@ -1,0 +1,157 @@
+package com.meiah.sys.pojo;
+
+import com.meiah.core.pojo.Entity;
+
+ 
+
+public class SysPolicyInfo  extends Entity {
+
+
+    // Fields    
+
+     private static final long serialVersionUID = 1L;
+	 private Long id;
+     private String type;
+     private String name;
+     private String content;
+     private Integer scope;
+     private Integer status;
+     private Integer isQQ;
+     private Long sysUserId;
+     private String userName;
+     //dto
+     private String addr;
+     private String persion;
+     private String event;
+     
+      
+ 
+    public String getAddr() {
+		return addr;
+	}
+
+
+
+	public void setAddr(String addr) {
+		this.addr = addr;
+	}
+
+
+
+	public String getEvent() {
+		return event;
+	}
+
+
+
+	public void setEvent(String event) {
+		this.event = event;
+	}
+
+
+
+	public String getPersion() {
+		return persion;
+	}
+
+
+
+	public void setPersion(String persion) {
+		this.persion = persion;
+	}
+
+
+
+	public String getUserName() {
+		return userName;
+	}
+
+
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+
+
+	public SysPolicyInfo() {
+    }
+ 
+   
+  
+	public Long getId() {
+        return this.id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getType() {
+        return this.type;
+    }
+    
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Integer getIsQQ() {
+		return isQQ;
+	} 
+	public void setIsQQ(Integer isQQ) {
+		this.isQQ = isQQ;
+	}
+	
+    public String getName() {
+        return this.name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getContent() {
+        return this.content;
+    }
+    
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public Integer getScope() {
+        return this.scope;
+    }
+    
+    public void setScope(Integer scope) {
+        this.scope = scope;
+    }
+
+    public Integer getStatus() {
+        return this.status;
+    }
+    
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+
+
+	public Long getSysUserId() {
+		return sysUserId;
+	}
+
+
+
+	public void setSysUserId(Long sysUserId) {
+		this.sysUserId = sysUserId;
+	}
+   
+
+
+
+
+
+
+
+
+}

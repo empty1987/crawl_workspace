@@ -1,0 +1,222 @@
+ 
+package com.xmu.core.pojo;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+
+ 
+public class Page {
+	//-- 公共变量 --//
+	public static final String ASC = "asc";
+	public static final String DESC = "desc";
+
+	//-- 分页参数 --//
+	protected int pageNo = 1;
+	protected int pageSize = 10;
+	protected String orderBy = null;
+	protected String order = null;
+	private int startNo = 0 ;                      
+	private int endNo = 0 ;                        
+	protected boolean autoCount = true;
+	protected long pageCount = 0;
+	
+
+	//-- 返回结果 --//
+	@SuppressWarnings("unchecked")
+	protected List result = Collections.emptyList();
+	protected long totalCount = 0;
+
+	//-- 构造函数 --//
+	public Page() {
+	}
+
+	public Page(final int pageSize) {
+		setPageSize(pageSize);
+	}
+
+	public Page(final int pageSize, final boolean autoCount) {
+		setPageSize(pageSize);
+		setAutoCount(autoCount);
+	}
+
+	//-- 访问查询参数函数 --//
+	/**
+	 * 获得当前页的页号,序号从1开始,默认为1.
+	 */
+	public int getPageNo() {
+		return pageNo;
+	}
+
+	/**
+	 * 设置当前页的页号,序号从1开始,低于1时自动调整为1.
+	 */
+	public void setPageNo(final int pageNo) {
+		this.pageNo = pageNo;
+
+		if (pageNo < 1) {
+			this.pageNo = 1;
+		}
+	}
+
+	/**
+	 * 获得每页的记录数量,默认为1.
+	 */
+	public int getPageSize() {
+		return pageSize;
+	}
+
+	/**
+	 * 设置每页的记录数量,低于1时自动调整为1.
+	 */
+	public void setPageSize(final int pageSize) {
+		this.pageSize = pageSize; 
+		 
+	}
+
+	 
+
+	/**
+	 * 获得排序字段,无默认值.多个排序字段时用','分隔.
+	 */
+	public String getOrderBy() {
+		if(StringUtils.isEmpty(orderBy))return "id";
+		return orderBy;
+	}
+
+	/**
+	 * 设置排序字段,多个排序字段时用','分隔.
+	 */
+	public void setOrderBy(final String orderBy) {
+		this.orderBy = orderBy;
+	}
+
+	/**
+	 * 是否已设置排序字段,无默认值.
+	 */
+	public boolean isOrderBySetted() {
+		return (StringUtils.isNotBlank(orderBy) && StringUtils.isNotBlank(order));
+	}
+
+	/**
+	 * 获得排序方向.
+	 */
+	public String getOrder() {
+		if(StringUtils.isEmpty(order))return "desc";
+		return order;
+	}
+
+	/**
+	 * 设置排序方式向.
+	 * 
+	 * @param order 可选值为desc或asc,多个排序字段时用','分隔.
+	 */
+	public void setOrder(final String order) {
+		//检查order字符串的合法值
+		String[] orders = StringUtils.split(StringUtils.lowerCase(order), ',');
+		for (String orderStr : orders) {
+			if (!StringUtils.equals(DESC, orderStr) && !StringUtils.equals(ASC, orderStr))
+				throw new IllegalArgumentException("排序方向" + orderStr + "不是合法值");
+		}
+
+		this.order = StringUtils.lowerCase(order);
+	}
+
+	/**
+	 * 查询对象时是否自动另外执行count查询获取总记录数, 默认为false.
+	 */
+	public boolean isAutoCount() {
+		return autoCount;
+	}
+
+	/**
+	 * 查询对象时是否自动另外执行count查询获取总记录数.
+	 */
+	public void setAutoCount(final boolean autoCount) {
+		this.autoCount = autoCount;
+	}
+
+	//-- 访问查询结果函数 --//
+
+	public int getStartNo() {
+		return startNo;
+	}
+
+	public void setStartNo(int startNo) {
+		this.startNo = startNo;
+	}
+
+	public int getEndNo() {
+		return endNo;
+	}
+
+	public void setEndNo(int endNo) {
+		this.endNo = endNo;
+	}
+
+	/**
+	 * 取得页内的记录列表.
+	 */
+	public List getResult() {
+		return result;
+	}
+
+	/**
+	 * 设置页内的记录列表.
+	 */
+	public void setResult(final List result) {
+		this.result = result;
+	}
+
+	/**
+	 * 取得总记录数, 默认值为-1.
+	 */
+	public long getTotalCount() {
+		return totalCount;
+	}
+
+	/**
+	 * 设置总记录数.
+	 */
+	public void setTotalCount(final long totalCount) {
+		this.totalCount = totalCount; 
+		
+		if (totalCount == (totalCount / pageSize) * pageSize) { //设置总页数
+			this.pageCount = totalCount / pageSize; 
+		} else {
+			this.pageCount = totalCount / pageSize + 1;
+		}
+		this.startNo = (pageNo - 1) * pageSize ;   //设置开始条数
+		
+		this.endNo = pageNo * pageSize ;                //设置结束条数
+	}
+
+	/**
+	 * 根据pageSize与totalCount计算总页数, 默认值为-1.
+	 */
+	public long getTotalPages() {
+		if (totalCount < 0)
+			return -1;
+
+		long count = totalCount / pageSize;
+		if (totalCount % pageSize > 0) {
+			count++;
+		}
+		return count;
+	}
+    
+
+	/**
+	 * 
+	 * @function 分页总数
+	 * @return long
+	 */
+	public long getPageCount() {
+		return getTotalPages();
+	}
+
+	public void setPageCount(long pageCount) {
+		this.pageCount = pageCount;
+	}
+}

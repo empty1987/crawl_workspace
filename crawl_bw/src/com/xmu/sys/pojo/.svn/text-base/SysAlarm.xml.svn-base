@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">                                                                                                  
+<sqlMap namespace="SysAlarm">                                                                                                                                    
+	<typeAlias alias="sysalarm" type="com.meiah.sys.pojo.SysAlarm" />                                                                  
+                                                                                                                                            
+	                                                                                                                             
+                                                                                                                                            
+	<insert id="add" parameterClass="sysalarm">                                                                              
+    		INSERT INTO SysAlarm (PhoneNum,AlarmType,Hour4Alarm,PolicyId,Status,AlarmName,EmailAddr) VALUES (#phonenum#,#alarmtype#,#hour4alarm#,#policyid#,#status#,#alarmname#,#emailaddr#)
+	</insert>                                                                                                                               
+                                                                                                                                            
+	                                                                                                                             
+                                                                                                                                            
+	<update id="edit" parameterClass="sysalarm">                                                                              
+    		UPDATE SysAlarm SET PhoneNum= #phonenum#,AlarmType= #alarmtype#,Hour4Alarm= #hour4alarm#,PolicyId= #policyid#,Status= #status#,AlarmName= #alarmname#,EmailAddr=#emailaddr#  where ID=#id#
+	</update>                                                                                                                               
+	                                                                                                                                        
+	                                                                                                                             
+                                                                                                                                            
+	<delete id="delete" parameterClass="java.lang.Long">                                                                         
+		  DELETE FROM SysAlarm where ID = #id#                                                                                            
+	</delete>                                                                                                                               
+                                                                                                                                            
+	                                                                                                                   
+                                                                                                                                            
+	<select id="getObj" resultClass="sysalarm"                                                                                         
+		parameterClass="java.lang.Long">                                                                                                  
+		SELECT * FROM SysAlarm WHERE ID =#id#      Limit 0,1                                                                                     
+	</select>                                                                                                                               
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                            
+	<sql id="includeComplex">                                                                                                               
+		<dynamic>                                                                                                                       
+			<isNotEmpty prepend="and" property="phonenum">
+				<![CDATA[ phonenum like '%$phonenum$%' ]]>
+			</isNotEmpty>
+			<isGreaterThan prepend="and" compareValue="0" property="alarmtype">
+				<![CDATA[ alarmtype =#alarmtype#  ]]>
+			</isGreaterThan> 
+			  
+			<isGreaterThan prepend="and" compareValue="0" property="status">
+				<![CDATA[ status =#status#  ]]>
+			</isGreaterThan> 
+			<isNotEmpty prepend="and" property="alarmname">
+				<![CDATA[ alarmname like '%$alarmname$%' ]]>
+			</isNotEmpty>
+                                                                              
+		</dynamic>                                                                                                                      
+	</sql>                                                                                                                                  
+	                                                                                                                                        
+	                                                                                                                     
+	<select id="getTotalCount" resultClass="java.lang.Integer"                                                                             
+		parameterClass="sysalarm">                                                                                    
+		SELECT COUNT(1) FROM SysAlarm WHERE 1 = 1                                                                                       
+		<include refid="includeComplex" />                                                                                              
+	</select>                                                                                                                               
+	                                                                                                                                        
+                                                                                                                
+     <select id="getPageList" resultClass="sysalarm"                                                                                         
+		parameterClass="sysalarm">                                                                                           
+		Select  * FROM SysAlarm where 1 = 1             
+		<include refid="includeComplex" /> 
+		ORDER BY $orderBy$ $order$                                                                                             
+		LIMIT #startNo# , #pageSize#                                                                    
+	</select>                                                                                                                                           
+	         
+	 <select id="findParam" resultClass="com.meiah.pojo.PolicyShortParam"                                                                                         
+		 >                                                                                           
+		select * from   PolicyShortParam  WHERE ID=1
+		limit 0,1                                                                
+	</select>  
+	<update id="saveparam" parameterClass="com.meiah.pojo.PolicyShortParam">                                                                              
+<!--    		INSERT INTO policyshortparam (email,host,username,pwd,times,sms) VALUES (#email#,#host#,#username#,#pwd#,#times#,#sms# )-->
+	UPDATE policyshortparam SET 
+	email= #email#,
+	host= #host#,
+	username= #username#,
+	pwd= #pwd#,
+	times= #times#,sms= 
+	#sms# 
+	where ID=#id#
+	</update>                                                                                                                                         
+</sqlMap>                                                                                                                                   

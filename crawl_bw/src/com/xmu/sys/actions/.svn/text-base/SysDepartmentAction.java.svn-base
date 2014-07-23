@@ -1,0 +1,168 @@
+/** 
+  *SysUsersAction.java 2009-11-25 xujb
+  */
+package com.meiah.sys.actions;
+
+ 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import com.googlecode.jsonplugin.annotations.JSON;
+import com.meiah.core.actions.BaseAction;
+import com.meiah.core.util.Constants;
+import com.meiah.sys.pojo.SysDepartment;
+import com.meiah.sys.pojo.UserSession;
+import com.meiah.sys.service.SysService;
+import com.opensymphony.xwork2.ModelDriven;
+
+/**
+ * @function 系统设置模块
+ * @author xujb
+ */
+public class SysDepartmentAction extends BaseAction implements ModelDriven<SysDepartment>{
+	
+	private static Logger logger = Logger.getLogger(SysDepartmentAction.class);
+	
+	private static final long serialVersionUID = 1L;
+	 
+	private SysService sysService;                        
+
+	private SysDepartment sysDepartment = new SysDepartment();  
+	
+	private List<SysDepartment> departmentList = new ArrayList<SysDepartment>();
+	
+	private String tips = "";  //提示消息
+	
+	private Long id ;   
+ 
+ 
+	/**
+	 * 
+	 * @function 列表
+	 * @return String
+	 */
+ 
+	public String list(){
+		
+		UserSession usersession = (UserSession)getSession().getAttribute(Constants.USERSESSION);
+		tips = sysService.getAllData(usersession);  
+		return "list";
+	}
+  
+
+	/**
+	 * 
+	 * @function 保存
+	 * @return String
+	 * @throws Exception 
+	 */
+	public String edit() throws Exception{  
+		
+		List<SysDepartment> list = sysService.getList("SysDepartment.getObjByName", sysDepartment);
+		
+		
+		if(list.size() > 0)
+		{
+			if(list.get(0).getId().equals(sysDepartment.getId()))
+			{
+				tips = "success";
+				sysDepartment = sysService.saveDepartment(sysDepartment); 
+			}
+			else 
+				tips = "同根下不能有相同的用户组";
+		}else
+		{
+			tips = "success";
+			sysDepartment = sysService.saveDepartment(sysDepartment); 
+		}
+		id = sysDepartment.getId();
+		return JSON;
+	}
+	
+	/**
+	 * 
+	 * @function 删除
+	 * @return String
+	 */
+	public String delete(){ 
+		try{
+		sysService.deleteDepartment(id);
+		tips = "删除成功";
+		}catch(Exception e){
+			logger.error("删除失败",e);
+			tips = "删除失败!";
+		}
+		return JSON;
+	}
+	
+	/**
+	 * 
+	 * @function 获取信息
+	 * @return String
+	 */
+	@JSON(serialize=false)
+	public String getInfo(){
+		sysDepartment = (SysDepartment)sysService.getObject("SysDepartment.getObj",  id); 
+		return JSON;
+	}
+	 
+ 
+
+	public SysDepartment getSysDepartment() {
+		return sysDepartment;
+	}
+
+
+	public void setSysDepartment(SysDepartment sysDepartment) {
+		this.sysDepartment = sysDepartment;
+	}
+
+
+	public String getTips() {
+		return tips;
+	}
+  
+	public void setTips(String tips) {
+		this.tips = tips;
+	}
+ 
+	 
+	/**
+	 * 实现接口ModelDriven方法
+	 */
+	
+	public SysDepartment getModel() {
+		 
+		return sysDepartment;
+	}
+	
+	/**
+	 * 
+	 * @function spring注入service接口方法
+	 * @param sysService void
+	 */
+	public void setSysService(SysService sysService) {
+		this.sysService = sysService;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
+
+	public List<SysDepartment> getDepartmentList() {
+		return departmentList;
+	}
+
+	public void setDepartmentList(List<SysDepartment> departmentList) {
+		this.departmentList = departmentList;
+	}
+
+
+}

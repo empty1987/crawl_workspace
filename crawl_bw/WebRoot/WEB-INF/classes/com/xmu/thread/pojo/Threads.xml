@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="Threads">
+	<typeAlias alias="thread" type="com.xmu.thread.pojo.Threads" />
+	
+	
+	<sql id="includeComplex">
+		<dynamic>
+			<isNotEmpty prepend="and" property="title">
+				<![CDATA[ title like '%$title$%'  ]]>
+			</isNotEmpty>
+		</dynamic>
+	</sql>
+
+	<select id="getThreadsTotalCount" resultClass="java.lang.Integer"
+		parameterClass="thread">
+		select count(*) from threads where 1=1
+		<include refid="includeComplex" />
+	</select>
+	<select id="getThreadsPageList" resultClass="thread" parameterClass="thread">
+		select * from threads where 1=1
+		<include refid="includeComplex" />
+		ORDER BY lastpost desc
+		LIMIT #startNo# , #pageSize#
+	</select>
+
+</sqlMap>                                                                                                                                   

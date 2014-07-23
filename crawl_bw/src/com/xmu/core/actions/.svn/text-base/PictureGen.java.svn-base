@@ -1,0 +1,78 @@
+package com.meiah.core.actions;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.imageio.ImageIO;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.meiah.core.service.BaseService;
+import com.meiah.core.util.ContextLookup;
+import com.meiah.sys.pojo.MyqqLoginInfo;
+
+/** 
+ *Copyright(C):	
+ *@n
+ *@n File:			AuthImg.java
+ *@n Function:		验证码图片生成 servlet
+ *@n Author:		xjb整合	 2009-7-12
+ */
+public class PictureGen extends HttpServlet
+{
+	 
+	private static final long serialVersionUID = 1L;
+	 
+	 
+	//重写service方法，生成对客户端的响应
+	public void service(HttpServletRequest request,
+		HttpServletResponse response) 
+		throws ServletException, IOException
+	{
+		//设置禁止缓存
+		response.setHeader("Pragma","No-cache");
+		response.setHeader("Cache-Control","no-cache");
+		response.setDateHeader("Expires", 0);
+		response.setContentType("image/jpeg");
+		BaseService baseService = (BaseService)getBean("baseService"); 
+		String id = StringUtils.trimToEmpty(request.getParameter("id"));
+		if(StringUtils.isNotEmpty(id)){
+			MyqqLoginInfo	myqqLoginInfo = (MyqqLoginInfo)baseService.getObject("MyqqLogin.getCheckCodeImage", Long.valueOf(id));
+			if(myqqLoginInfo != null && myqqLoginInfo.getCheckCodePic()!= null){ 
+				BufferedImage img = null;
+				InputStream buffin = null;
+				try{
+				buffin = new ByteArrayInputStream(myqqLoginInfo.getCheckCodePic());
+				img = ImageIO.read(buffin); 
+				//向输出流中输出图牄1�7
+				ImageIO.write(img, "JPEG", response.getOutputStream());  
+				}catch(Exception e){
+					e.printStackTrace();
+				}finally{
+					if(buffin != null){
+						buffin.close();
+						buffin = null;
+					}
+					img = null; 
+					
+				}
+			}
+		}
+
+	}
+	
+	/**
+    *
+    * @function 获取bean
+    */ 
+	public Object getBean(String beanName) {
+		return ContextLookup.getBean(this.getServletContext(), beanName);
+	}
+	
+}

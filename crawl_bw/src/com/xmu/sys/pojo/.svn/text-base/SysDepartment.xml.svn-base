@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>													
+<!DOCTYPE sqlMap                                                                                                                            
+PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN"                                                                                                 
+"http://www.ibatis.com/dtd/sql-map-2.dtd">                                                                                                  
+<sqlMap namespace="SysDepartment">                                                                                                                                    
+	<typeAlias alias="sysdepartment" type="com.meiah.sys.pojo.SysDepartment" />                                                                  
+                                                                                                                                            
+	                                                                                                                             
+                                                                                                                                            
+	<insert id="add" parameterClass="sysdepartment">     
+    	 INSERT INTO SysDepartment (Name,ParId,Code) VALUES (#name#,#parId#,#code#)
+    		  
+	</insert>                                                                                                                               
+                                                                                                                                  
+	<update id="edit" parameterClass="sysdepartment">                                                                              
+    		UPDATE SysDepartment SET Name= #name# where ID=#id#
+	</update>                                                                                                                               
+	                                                                                                                                        
+	 <update id="updatecode" parameterClass="sysdepartment">                                                                              
+    		UPDATE SysDepartment SET code= #code# where ID=#id#
+	</update>                                                                                                                              
+                 
+    <update id="updatemonitorgroup" >                                                                              
+    		update qqgroupmonitor,sysdepartment,sysusers set qqgroupmonitor.depcode = sysdepartment.Code where 
+				qqgroupmonitor.SysUsersId=sysusers.id and sysusers.DepId = sysdepartment.id
+	</update>          
+                 
+                                                                                                                                            
+	<update id="delete" parameterClass="sysdepartment">                                                                         
+		  DELETE FROM SysDepartment where ID = #id#
+		                                                                                             
+	</update>   
+	
+	<update id="deletePolicy4Dep" parameterClass="sysdepartment">                                                                         
+		    DELETE FROM SysPolicy where SysUserId in (select id from sysusers where DepId = #id# )           
+	</update>                                                                                                                           
+     <update id="deleteUser4Dep" parameterClass="sysdepartment">                                                                         
+		    DELETE FROM SysUsers where DepId=#id#               
+	</update>  
+                                                                                 
+	  <select id="getList" resultClass="sysdepartment" parameterClass="java.lang.String">                                                                                                  
+			SELECT * FROM SysDepartment where (code = #code# or code like concat(#code# , "-%")) order by code                                                                                
+     </select>   
+	     
+	 <select id="getChildList" resultClass="java.lang.Long" parameterClass="java.lang.Long">                                                                                                  
+			SELECT id FROM SysDepartment WHERE parId=#id#                                                              
+     </select> 
+     
+	 <select id="getMaxID" resultClass="java.lang.Long">                                                                                                  
+			SELECT max(ID) FROM SysDepartment                                                                                 
+     </select>
+             
+	 <select id="getList4add" resultClass="sysdepartment" parameterClass="java.lang.String">                                                                                                  
+		SELECT * FROM SysDepartment where (code = #code# or code like concat(#code# , "-%")) order by code                                                                                     
+	</select>
+	
+ 
+	
+	<select id="getMaxDepCode" resultClass="java.lang.String" parameterClass="java.lang.String">                                                                                                  
+			<![CDATA[ 
+			SELECT max(left(code,length('$parCode$')+2)) as Code FROM SysDepartment WHERE Code <> '$parCode$'  and Code like '$parCode$%'
+			 ]]>                                                                                  
+	</select>                
+	 
+	                                                                                                                      
+	<select id="getObj" resultClass="sysdepartment"                                                                                         
+		parameterClass="java.lang.Long">                                                                                                  
+		SELECT * FROM SysDepartment WHERE ID =#id#                                                                                           
+	</select>                                                                                                                               
+      <select id="getObjByCode" resultClass="sysdepartment"                                                                                         
+		parameterClass="java.lang.String">   
+		                                                                                               
+		SELECT * FROM SysDepartment WHERE code =#code#  Limit 0,1                                                                                         
+	</select> 
+	
+	<select id="getObjByName" resultClass="sysdepartment" parameterClass="sysdepartment">
+		select * from SysDepartment where parId = #parId# and name = #name#
+	</select>                                                                                                      
+                                                                                                                                            
+	                                                                                                                                        
+</sqlMap>                                                                                                                                   

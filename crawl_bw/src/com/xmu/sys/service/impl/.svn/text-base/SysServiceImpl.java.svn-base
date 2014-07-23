@@ -1,0 +1,1173 @@
+/** 
+ *SysServiceImpl.java 2009-11-25 xujb
+ */
+package com.meiah.sys.service.impl;
+
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.security.MessageDigest;
+import java.security.cert.X509Certificate;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.meiah.core.service.impl.BaseServiceImpl;
+import com.meiah.core.util.Base64Utils;
+import com.meiah.core.util.CertificateUtils;
+import com.meiah.core.util.Constants;
+import com.meiah.core.util.DESCoder;
+import com.meiah.monitor.pojo.QQGroupMonitorInfo;
+import com.meiah.qqzone.pojo.QQZone;
+import com.meiah.sys.pojo.MyqqLoginInfo;
+import com.meiah.sys.pojo.SysDepartment;
+import com.meiah.sys.pojo.SysLoginInfo;
+import com.meiah.sys.pojo.SysLogs;
+import com.meiah.sys.pojo.SysMenu;
+import com.meiah.sys.pojo.SysPolicyInfo;
+import com.meiah.sys.pojo.SysRole;
+import com.meiah.sys.pojo.SysUserIP;
+import com.meiah.sys.pojo.SysUsers;
+import com.meiah.sys.pojo.UserSession;
+import com.meiah.sys.service.SysService;
+import com.meiah.sys.service.SysUserIPService;
+
+/**
+ * @function
+ * @author xujb
+ */
+public class SysServiceImpl extends BaseServiceImpl implements SysService {
+
+	SysUserIPService sysuseripservicde;
+
+	public SysUserIPService getSysuseripservicde() {
+		return sysuseripservicde;
+	}
+
+	public void setSysuseripservicde(SysUserIPService sysuseripservicde) {
+		this.sysuseripservicde = sysuseripservicde;
+	}
+
+	/**
+	 * 
+	 * @function 登录验证
+	 * @param session
+	 *            session对象
+	 * @param sysUsers
+	 *            用户登录数据
+	 * @param rand
+	 *            随机验证码
+	 * @return String 返回是否登录成功与错误提示
+	 */
+	@SuppressWarnings("unchecked")
+	public String login(HttpServletRequest request, SysUsers sysUsers,
+			String rand, String sign) {
+
+		if (StringUtils.isEmpty(sysUsers.getUserName()))
+			return "用户名不能为空";
+		if (StringUtils.isEmpty(sysUsers.getPassWords()))
+			return "密码不能为空";
+		String FLAG = StringUtils.trimToEmpty(request.getParameter("FLAG"));
+		if (!StringUtils.equalsIgnoreCase(sign, "xxx")) {
+			if (!StringUtils.equalsIgnoreCase(FLAG, "PICO")) {
+
+				String rand_session = StringUtils.trimToEmpty(
+						(String) request.getSession().getAttribute("rand"))
+						.toLowerCase();
+				if (!rand_session.equals(rand.toLowerCase()))
+					return "验证码错误！";
+
+			}
+		}
+		Map map = new Hashtable();
+		map.put("userName", sysUsers.getUserName());
+
+		map.put("passWords", encryptPWD(StringUtils.trimToEmpty(sysUsers
+				.getPassWords())));
+
+		// 查询符合条件的用户
+		SysUsers temp_user = (SysUsers) getObject(
+				"SysUsers.getObjByloginAndPassword", map);
+
+		// 是否使用外部ukey认证
+		if (Constants.ISUKEY == "N") {
+			// 防止单点登入没经过认证服务器
+			String ip = request.getRemoteHost();
+			String ukeyIP = Constants.UKEYIP;
+			// 如果没经过认证服务器，则跳转
+			if (!ip.equals(ukeyIP)) {
+				// 返回认证服务器
+				return "validate";
+			} else {
+				// 否则生成对称加密的时间戳
+				String stamp = new Timestamp(new Date().getTime()).toString();
+				String key;
+				try {
+					key = DESCoder.initKey();
+
+					byte[] inputData = stamp.getBytes();
+					// DES加密
+					inputData = DESCoder.encrypt(inputData, key);
+					// base64加密
+					String timeStamp = DESCoder.encryptBASE64(inputData);
+
+					// 用户名和时间戳存入map,并把key也放入
+					Constants.stamp.put(sysUsers.getUserName(), timeStamp);
+					Constants.stamp.put(sysUsers.getUserName() + "key", key);
+					return "proxy";
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+		}
+
+		if (temp_user != null) {
+
+			if (Constants.ISUKEY == "Y"
+					&& StringUtils.equals(Constants.ISSSL, "Y")) {
+				X509Certificate[] cers = (X509Certificate[]) request
+						.getAttribute("javax.servlet.request.X509Certificate");
+				if (cers != null && cers.length > 0) {
+					X509Certificate cer = cers[0];
+					if (!StringUtils.equalsIgnoreCase(CertificateUtils
+							.getSerialNumber(cer), temp_user.getUkeySerialNo()))
+						return "你所登陆的用户与所用Ukey不一致，请使用该用户的Ukey.";
+				} else
+					return "服务器未得到客户端证书信息，请确认Ukey已经插入！";
+			}
+			Date date = new Date();
+			SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd");
+			String tempDate = ft.format(date);
+			if (temp_user.getStatus() == 0) {
+				return "该帐号已失效！";
+			} else if (temp_user.getAlive().compareToIgnoreCase(tempDate) < 0) { // 判断账号是否过了有效期
+				return "账号已过有效期，请与管理员联系！";
+			} else { // 登录成功
+				SysRole sysRole = (SysRole) getObject("SysRole.getObj",
+						temp_user.getSysRole());
+				SysDepartment sysDepartment = (SysDepartment) getObject(
+						"SysDepartment.getObj", temp_user.getDepId());
+
+				if (!StringUtils.isEmpty(Constants.ISFILTERUSER)
+						&& !StringUtils.endsWithIgnoreCase(sysDepartment
+								.getCode(), "GA1")) {
+					if (!StringUtils.contains("," + Constants.ISFILTERUSER
+							+ ",", "," + sysDepartment.getCode() + ",")) {
+						return "你没有权限登录该系统，请联系管理员增加权限！";
+					}
+				}
+				UserSession userSession = new UserSession();
+				userSession.setId(temp_user.getId());
+				userSession.setUserName(temp_user.getUserName());
+				userSession.setName(temp_user.getRealName());
+				userSession.setIsVlidMusic(temp_user.getIsVlidMusic());
+				userSession.setSysRole(sysRole);
+				userSession.setSysDepartment(sysDepartment);
+				userSession.setUsertype(temp_user.getUsertype());
+				userSession.setPagestyle(temp_user.getPagestyle() < 1 ? 1
+						: temp_user.getPagestyle());
+				String topMenuID = Base64Utils.decode(temp_user.getTopMenuID());
+				userSession.setTopMenuID(topMenuID);// 菜单ID
+				StringBuffer sb = new StringBuffer();
+				if (topMenuID != null && !topMenuID.equals("")) {
+					String[] topMenuIDs = topMenuID.split(",");
+					for (String idStr : topMenuIDs) {
+						long id = Long.valueOf(idStr);
+						String name = (String) getObject("SysMenu.getMenuByID", id);
+						sb.append(name + ",");
+					}
+				}
+				String topMenu = sb.toString().substring(0 , sb.toString().length() - 1);
+				userSession.setTopMenu(topMenu);
+				request.getSession().setAttribute(Constants.USERSESSION,
+						userSession);
+
+				// 记录显示风格
+				request.getSession().setAttribute("pageStyle",
+						userSession.getPagestyle());
+
+				// 记录在cookie上，判断提示框是不是只运行一次
+				request.getSession()
+						.setAttribute("userid", userSession.getId());
+				request.getSession().setAttribute("username",
+						userSession.getName());
+
+				SysLogs sysLogs = new SysLogs(userSession.getId(), 1, "登录系统",
+						request.getRemoteHost());
+				saveObject("SysLogs.add", sysLogs);
+				SysUserIP user = (SysUserIP) getObject("SysUserIP.getUserIP",
+						temp_user.getId());
+				// 第一次登录的用户或者是没记录的用户
+				if (user == null) {
+					user = new SysUserIP();
+					user.setIp(request.getRemoteHost());
+					user.setEtime(new Timestamp(new Date().getTime()));
+					user.setUserid(temp_user.getId());
+					saveObject("SysUserIP.addIP", user);
+					request
+							.getSession()
+							.setAttribute("message",
+									"欢迎登录，这是您第一次登录系统，如需帮助，请查看屏幕右上方的用户手册，用户手册密码请咨询技术支持人员");
+				}
+				// 已经记录过的用户
+				else {
+					String oldIP = user.getIp();
+					Timestamp oldTime = user.getEtime();
+					SysUserIP user1 = sysuseripservicde.setSysUserIP(user,
+							request.getRemoteHost());
+
+					updateObject("SysUserIP.updateIP", user1);
+
+					if (user1.isSime()) {
+						request.getSession().setAttribute(
+								"message",
+								"欢迎登录<br>您上次登录时间为<br>" + oldTime
+										+ "<br>您登录IP和上次登录是相同的:<br>" + oldIP);
+					} else
+						request.getSession().setAttribute(
+								"message",
+								"欢迎登录<br>您上次登录时间为<br>" + oldTime
+										+ "<br>上次登录IP为:" + oldIP
+										+ "<br>现在登录IP为:" + user1.getIp());
+				}
+				return "";
+			}
+		} else {
+			SysLoginInfo syslogininfo = new SysLoginInfo();
+			syslogininfo.setUsername(sysUsers.getUserName());
+			syslogininfo.setEtime(new Timestamp(new Date().getTime()));
+			saveObject("SysLoginInfo.add", syslogininfo);
+			String username = sysUsers.getUserName();
+			// System.out
+			// .println("-------------------------------------------------");
+			// System.out.println("username : " + username);
+			int total = (Integer) getObject("SysLoginInfo.getTotalByUsername",
+					username);
+			// System.out.println("total : " + total);
+			// System.out
+			// .println("-------------------------------------------------");
+			if (total > 10) {
+				SysUsers sysuser = (SysUsers) getObject(
+						"SysUsers.getObjByUsername", username);
+				if (sysuser != null) {
+					updateObject("SysUsers.updateStates", sysuser);
+					return "由于输入次数频繁，此帐号已无效，请与管理员联系！";
+				}
+			}
+
+			return "用户名或密码错误！";
+		}
+
+	}
+
+	/**
+	 * 
+	 * @function 获取用户权限菜单
+	 * @param usersession
+	 *            用户usersession
+	 * @param menuId
+	 *            菜单ID
+	 * @return List 菜单列表
+	 */
+	public List getUserMenuList(UserSession usersession, Long menuId) {
+
+		SysRole sysRole = usersession.getSysRole();
+		String userName = usersession.getUserName();
+		if (sysRole != null) {
+			String allowMenuId = StringUtils.trimToEmpty(sysRole
+					.getAllowMenuId());
+			if (allowMenuId.length() > 0) {
+				allowMenuId = "," + allowMenuId + ",";
+				List<SysMenu> returnList = new ArrayList<SysMenu>(); // 保存返回的菜单
+				List list = Constants.menuList;
+
+				Iterator it = list.iterator();
+				while (it.hasNext()) {
+					SysMenu sysMenu = (SysMenu) it.next();
+
+					if (sysMenu.getParId().equals(menuId)
+							&& (allowMenuId
+									.indexOf("," + sysMenu.getId() + ",") != -1 || userName
+									.equals("admin"))) {
+
+						if (usersession.getUsertype() != 0
+								&& !usersession.getSysDepartment().getCode()
+										.equals("GA1")
+								&& (sysMenu.getId() == 21 || sysMenu.getId() == 22)) {
+							continue;
+						}
+						sysMenu.setName(replaceMenuName(sysMenu.getName(),
+								usersession));
+						returnList.add(sysMenu);
+					}
+
+				}
+				return returnList;
+
+			}
+		}
+		return null;
+	}
+
+	public String replaceMenuName(String name, UserSession usersession) {
+
+		if (!StringUtils.isEmpty(name)) {
+			Map map = (Map) Constants.titleMap
+					.get(usersession.getUsertype() < 1 ? "1" : usersession
+							.getUsertype()
+							+ "");
+			if (map != null && map.size() > 0) {
+				Iterator it = map.keySet().iterator();
+				while (it.hasNext()) {
+
+					String key = (String) it.next();
+					String value = (String) map.get(key);
+					name = name.replaceAll("#" + key + "#", value);
+				}
+			}
+
+		}
+
+		return name;
+	}
+
+	/**
+	 * 
+	 * @function 保存用户信息
+	 * @param sysUsers
+	 *            用户信息
+	 * @return String 操作提示
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
+	 */
+	public String saveSysUsers(SysUsers sysUsers)
+			throws IllegalAccessException, InvocationTargetException {
+
+		if (sysUsers.getId() != null && sysUsers.getId() > 0) {
+			if (sysUsers.getSysRole() == 1 && sysUsers.getDepId() != 1) {
+				sysUsers.setSysRole(3L);
+			}
+			updateObject("SysUsers.edit", sysUsers);
+			updateObject("SysUsers.editqqgroupmonitor", sysUsers);
+
+		} else {
+			sysUsers.setPassWords(encryptPWD(StringUtils.trimToEmpty(sysUsers
+					.getPassWords())));
+			if (sysUsers.getDepId() == null) {
+				sysUsers.setDepId(1L);
+			}
+			if (sysUsers.getSysRole() == 1 && sysUsers.getDepId() != 1) {
+				sysUsers.setSysRole(3L);
+			}
+			saveObject("SysUsers.add", sysUsers);
+		}
+		return "success";
+
+	}
+
+	/**
+	 * 
+	 * @function 修改密码
+	 * @param passwordOld
+	 *            源密码
+	 * @param passwordNew
+	 *            新密码
+	 * @param usersession
+	 *            用户信息
+	 * @return String 错误提示字符串
+	 */
+	public String savePassword(String passwordOld, String passwordNew,
+			UserSession usersession) {
+
+		if (StringUtils.isEmpty(usersession.getUserName()))
+			return "用户名不能为空";
+		if (StringUtils.isEmpty(passwordOld))
+			return "密码不能为空";
+		Map map = new Hashtable();
+		map.put("userName", usersession.getUserName());
+		map.put("passWords", encryptPWD(StringUtils.trimToEmpty(passwordOld)));
+
+		// 查询符合条件的用户
+		SysUsers temp_user = (SysUsers) getObject(
+				"SysUsers.getObjByloginAndPassword", map);
+		if (temp_user != null) {
+			temp_user.setPassWords(encryptPWD(StringUtils
+					.trimToEmpty(passwordNew)));
+			updateObject("SysUsers.editPassword", temp_user);
+			return "密码修改成功";
+		}
+		return "密码修改失败";
+	}
+
+	/**
+	 * 
+	 * @function 获取全部策略类别列表
+	 * @return List
+	 */
+	@SuppressWarnings("unchecked")
+	public List getAllTypes(Long l) {
+
+		return getList("SysPolicy.getTypeList", l);
+	}
+
+	/**
+	 * 
+	 * @function 获取随机的一个验证码
+	 * @param id
+	 *            登录信息ID
+	 * @return MyqqLoginInfo 返回实体
+	 */
+	@SuppressWarnings("unchecked")
+	public MyqqLoginInfo getRandomCheckCode(Long id, String url) {
+
+		MyqqLoginInfo myqqLoginInfo = null;
+		// OutputStream outputImage = null;
+		// InputStream is = null;
+		if (id != null && id > 0) {
+			myqqLoginInfo = (MyqqLoginInfo) getObject("MyqqLogin.getObj", id);
+			if (myqqLoginInfo != null)
+				return myqqLoginInfo;
+		}
+		List list = getList("MyqqLogin.getRandomObj");
+		if (list != null && list.size() > 0) {
+			int t = list.size();
+			java.util.Random random = new java.util.Random();
+			int r = random.nextInt(t);
+			myqqLoginInfo = (MyqqLoginInfo) list.get(r);
+			return myqqLoginInfo;
+		}
+
+		// if(myqqLoginInfo != null){
+		// File file = new
+		// File(url+"\\images\\checkCode\\"+myqqLoginInfo.getUin()+".jpg");
+		// if(file.exists())file.delete();
+		// try {
+		// file.createNewFile();
+		// is = myqqLoginInfo.getCheckCodePic().getBinaryStream();
+		//		 
+		// outputImage = new FileOutputStream(file);
+		// int size = 0;
+		// byte[] buffer = new byte[4096];
+		// while ((size = is.read(buffer)) != -1) {
+		// System.out.println(size);
+		// outputImage.write(buffer, 0, size);
+		// }
+		//
+		// } catch (Exception e) {
+		// logger.error("写图片文件错误", e);
+		// }finally {
+		// try {
+		// is.close();
+		// outputImage.close();
+		// } catch (Exception e) {
+		// logger.error("关闭流错误", e);
+		// }
+		// }
+		//
+		// myqqLoginInfo.setCheckCodePic(null);
+		// }
+		return myqqLoginInfo;
+	}
+
+	/**
+	 * 
+	 * @function 保存验证码
+	 * @param myqqLoginInfo
+	 *            void
+	 */
+	public void saveCheckCode(MyqqLoginInfo myqqLoginInfo, String url) {
+
+		MyqqLoginInfo temp = (MyqqLoginInfo) getObject("MyqqLogin.getObj",
+				myqqLoginInfo.getId());
+		temp.setCheckCode(myqqLoginInfo.getCheckCode());
+		temp.setCheckCodePic(null);
+		File file = new File(url + "\\verify\\" + myqqLoginInfo.getUin()
+				+ ".jpg");
+		if (file.exists())
+			file.delete();
+		updateObject("MyqqLogin.edit", temp);
+	}
+
+	/**
+	 * 
+	 * @function 保存myqq登录信息
+	 * @param myqqLoginInfo
+	 *            myqq登录信息
+	 * @return String
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
+	 */
+	public String saveMyqqLoginInfo(MyqqLoginInfo myqqLoginInfo)
+			throws IllegalAccessException, InvocationTargetException {
+
+		if (myqqLoginInfo.getId() != null && myqqLoginInfo.getId() >= 0) {
+			MyqqLoginInfo temp = (MyqqLoginInfo) getObject("MyqqLogin.getObj",
+					myqqLoginInfo.getId());
+			if (temp != null && temp.getId() != null && temp.getId() >= 0) {
+				myqqLoginInfo.setCheckCode(temp.getCheckCode());
+				myqqLoginInfo.setCheckCodePic(temp.getCheckCodePic());
+				myqqLoginInfo.setLogindate(temp.getLogindate());
+				myqqLoginInfo.setMacCode(temp.getMacCode());
+				myqqLoginInfo.setStatus(temp.getStatus());
+				updateObject("MyqqLogin.edit", myqqLoginInfo);
+			} else
+				return "系统找不到该登录信息，可能原因：在您操作的同时，有人删除了该条信息，请刷新页面后再操作";
+		} else {
+			myqqLoginInfo.setStatus(0);
+			myqqLoginInfo.setCheckCode("");
+			Long id = (Long) saveObject("MyqqLogin.add", myqqLoginInfo);
+			// System.out.println(id);
+		}
+		return "success";
+	}
+
+	/**
+	 * 
+	 * @function 查看是否有验证码
+	 * @return int
+	 */
+	public int getCountCheckCode() {
+
+		return (Integer) getObject("MyqqLogin.getCountCheckCode");
+	}
+
+	/**
+	 * 
+	 * @param usersession
+	 *            用户登录信息
+	 * @return 角色权限树
+	 */
+
+	@SuppressWarnings("unchecked")
+	public String getAllData(UserSession usersession) {
+
+		List<SysDepartment> list = getList("SysDepartment.getList", StringUtils
+				.trimToEmpty(usersession.getSysDepartment().getCode()));
+		if (list != null && list.size() > 0) {
+			StringBuffer sb = new StringBuffer();
+			for (int i = 0; i < list.size(); i++) {
+				SysDepartment temp = (SysDepartment) list.get(i);
+				if (i == 0 && temp.getParId() != -1) {
+					sb
+							.append("data['-1_")
+							.append(
+									temp.getParId()
+											+ "'] = 'text: 管理员; sortField: 1';");
+
+				}
+				sb.append("data['").append(temp.getParId()).append("_").append(
+						temp.getId()).append("'] = 'text: ").append(
+						temp.getName()).append(";sortField: ").append("0")
+						.append("';");
+			}
+
+			return sb.toString();
+		}
+		return "";
+	}
+
+	/**
+	 * 
+	 * @param sysDepartment
+	 *            参数
+	 * @return SysDepartment
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public SysDepartment saveDepartment(SysDepartment sysDepartment)
+			throws Exception {
+
+		if (sysDepartment.getId() != null && sysDepartment.getId() > 0) {
+			SysDepartment temp = (SysDepartment) getObject(
+					"SysDepartment.getObj", sysDepartment.getId());
+			temp.setName(sysDepartment.getName());
+			updateObject("SysDepartment.edit", sysDepartment);
+		} else {
+			sysDepartment.setCode("");
+			saveObject("SysDepartment.add", sysDepartment);
+			Long id = (Long) getObject("SysDepartment.getMaxID");
+			sysDepartment.setId(id);
+			SysDepartment par_sysDepartment = (SysDepartment) getObject(
+					"SysDepartment.getObj", sysDepartment.getParId());
+			String parCode = "GA1";
+			if (par_sysDepartment != null)
+				parCode = StringUtils.trimToEmpty(par_sysDepartment.getCode())
+						.equals("") ? parCode : StringUtils
+						.trimToEmpty(par_sysDepartment.getCode());
+
+			sysDepartment.setCode(parCode + "-" + sysDepartment.getId());
+			saveObject("SysDepartment.updatecode", sysDepartment);
+		}
+
+		return sysDepartment;
+	}
+
+	public void updateCode() {
+
+		List list = getList("SysDepartment.getList", null);
+		if (list != null && list.size() > 0) {
+
+			Iterator it = list.iterator();
+			while (it.hasNext()) {
+				SysDepartment sysDepartment = (SysDepartment) it.next();
+				SysDepartment par_sysDepartment = (SysDepartment) getObject(
+						"SysDepartment.getObj", sysDepartment.getParId());
+				String parCode = "GA1";
+				if (par_sysDepartment != null) {
+					parCode = StringUtils.trimToEmpty(
+							par_sysDepartment.getCode()).equals("") ? parCode
+							: StringUtils.trimToEmpty(par_sysDepartment
+									.getCode());
+					sysDepartment
+							.setCode(parCode + "-" + sysDepartment.getId());
+				} else
+					sysDepartment.setCode("GA1");
+
+				saveObject("SysDepartment.updatecode", sysDepartment);
+
+			}
+		}
+		updateObject("SysDepartment.updatemonitorgroup", null);
+
+	}
+
+	/**
+	 * 
+	 * @function：根据同级单位最大编码获取单位编码 
+	 *                            （编码规则：一级单位用两位编码，编码用0-9，A-Z，末位不为0，由此默认编码宽度为36*35
+	 *                            ）
+	 * @param： maxChildDeptCode 同一上级单位的角色的最大编码字符串
+	 * @param parCode
+	 *            父单位
+	 * @return：单位编码
+	 * @throws Exception
+	 */
+	// public String getDeptCode(String parCode, String maxChildDeptCode)
+	// throws Exception {
+	//
+	// if (StringUtils.isEmpty(maxChildDeptCode))
+	// return parCode + "01";
+	//
+	// maxChildDeptCode = StringUtils.trimToEmpty(maxChildDeptCode);
+	//
+	// char lastChar = maxChildDeptCode.charAt(maxChildDeptCode.length() - 1);
+	//
+	// int lastCharNo = lastChar;
+	//
+	// char preLastChar = maxChildDeptCode
+	// .charAt(maxChildDeptCode.length() - 2);
+	//
+	// int preLastCharNo = preLastChar;
+	//
+	// if (lastCharNo == 57) { // 为数字9
+	//
+	// lastChar = (char) (lastCharNo + 8);
+	//
+	// } else if (lastCharNo > 48 && lastCharNo < 90) {
+	//
+	// lastChar = (char) (lastCharNo + 1);
+	//
+	// } else if (lastCharNo == 90) {
+	//
+	// lastChar = '0';
+	//
+	// if (preLastCharNo == 57) {
+	//
+	// preLastChar = (char) (preLastCharNo + 8);
+	//
+	// } else if (preLastCharNo >= 48 && preLastCharNo < 90) {
+	//
+	// preLastChar = (char) (preLastCharNo + 1);
+	//
+	// } else if (preLastCharNo == 90) {
+	//
+	// System.out.println("角色编号已经达到最大值！请联系技术人员调限！本系统只支持36*35个同级单位编码！");
+	// throw new RuntimeException(
+	// "角色编号已经达到最大值！请联系技术人员调限！本系统只支持36*35个同级单位编码！");
+	// }
+	// }
+	//
+	// return maxChildDeptCode.substring(0, maxChildDeptCode.length() - 2)
+	// + String.valueOf(preLastChar) + String.valueOf(lastChar);
+	//
+	// }
+
+	/**
+	 * @functon 删除角色，将所有将该角色设置为父角色的字角色设置父角色为该角色的父角色 ...删除所有用户
+	 * @param id
+	 */
+	public void deleteDepartment(Long id) {
+
+		List list = getList("SysDepartment.getChildList", id);
+		if (list != null && list.size() > 0) {
+			Iterator it = list.iterator();
+			while (it.hasNext()) {
+				Long tempId = (Long) it.next();
+				deleteDepartment(tempId);
+			}
+		}
+		SysDepartment sysDepartment = (SysDepartment) getObject(
+				"SysDepartment.getObj", id);
+		if (sysDepartment.getParId().equals(Long.valueOf(-1)))
+			return;
+		if (sysDepartment != null) {
+			updateObject("SysDepartment.deletePolicy4Dep", sysDepartment);
+			updateObject("SysDepartment.deleteUser4Dep", sysDepartment);
+			updateObject("SysDepartment.delete", sysDepartment);
+
+		}
+
+	}
+
+	/**
+	 * 
+	 * @functon 获取策略树形菜单
+	 * @param usersession
+	 *            用户登录信息
+	 * @return 用户菜单
+	 */
+	public String getMenuData(UserSession usersession, String flag) {
+
+		StringBuffer sb = new StringBuffer();
+
+		flag = StringUtils.trimToEmpty(flag);
+
+		sb.append("data['-1_1'] = 'text: 快捷搜索;sortField: 0';");
+
+		Map map = new Hashtable();
+		map.put("sysUserId", usersession.getId());
+
+		List listpolicy = getList("SysPolicy.getList4Menu", map);
+
+		String preIsQQ = "-1";
+
+		String preType = "";
+
+		String type = "";
+
+		if (listpolicy != null && listpolicy.size() > 0) {
+
+			Iterator it = listpolicy.iterator();
+
+			while (it.hasNext()) {
+
+				SysPolicyInfo syspolicy = (SysPolicyInfo) it.next();
+
+				if (!StringUtils.equalsIgnoreCase(preIsQQ, "isQQ"
+						+ StringUtils.trimToEmpty(syspolicy.getIsQQ() + ""))) {
+
+					preIsQQ = "isQQ" + syspolicy.getIsQQ();
+					String temp = "data['1_" + preIsQQ + "'] = 'text: ";
+					if (syspolicy.getIsQQ() == 0)
+						temp += "关键字";
+					else if (syspolicy.getIsQQ() == 1)
+						temp += "QQ聚焦";
+					else if (syspolicy.getIsQQ() == 2)
+						temp += "QQ群聚焦";
+					else if (syspolicy.getIsQQ() == 3)
+						temp += "事件聚焦";
+					else
+						continue;
+
+					sb.append(temp);
+					sb.append(";sortField: ").append("0';");
+					preType = "";
+				}
+				if (!StringUtils.equalsIgnoreCase(preType, "type"
+						+ StringUtils.trimToEmpty(syspolicy.getType()))) {
+
+					preType = "type" + syspolicy.getType();
+					type = "type" + syspolicy.getId();
+					sb.append("data['").append(preIsQQ).append("_")
+							.append(type).append("'] = 'text: ").append(
+									syspolicy.getType()).append(";sortField: ")
+							.append("0").append("';");
+
+				}
+
+				sb
+						.append("data['")
+						.append(type)
+						.append("_name")
+						.append(syspolicy.getId())
+						.append("'] = 'text: ")
+						.append(syspolicy.getName())
+						.append(";hint: ")
+						.append(
+								syspolicy.getIsQQ().intValue() == 0
+										|| syspolicy.getIsQQ().intValue() == 3 ? filterSpecil(syspolicy
+										.getContent())
+										: syspolicy.getName()).append(
+								";sortField: ").append("0").append("';");
+			}
+		}
+
+		// 是否开启查看直接下级的策略服务
+		if (StringUtils.endsWithIgnoreCase(Constants.ISSHOWPOLICY4CHILD, "Y")) {
+			String preUsers = "";
+			preIsQQ = "-1";
+			preType = "";
+			type = "";
+			List list = getList("SysPolicy.getList4Menux", usersession
+					.getSysDepartment().getCode());
+			if (list != null && list.size() > 0) {
+				Iterator it = list.iterator();
+				while (it.hasNext()) {
+
+					SysPolicyInfo syspolicy = (SysPolicyInfo) it.next();
+					if (!StringUtils.equalsIgnoreCase(preUsers, StringUtils
+							.trimToEmpty("LChildUser"
+									+ syspolicy.getSysUserId()))) {
+
+						preUsers = "LChildUser" + syspolicy.getSysUserId();
+						sb.append("data['").append("1").append("_").append(
+								preUsers).append("'] = 'text: ").append(
+								syspolicy.getUserName()).append(";sortField: ")
+								.append("0").append("';");
+					}
+					if (!StringUtils.equalsIgnoreCase(preIsQQ, "LisQQ"
+							+ syspolicy.getSysUserId() + syspolicy.getIsQQ())) {
+
+						preIsQQ = "LisQQ" + syspolicy.getSysUserId()
+								+ syspolicy.getIsQQ();
+						sb.append("data['").append(preUsers).append("_")
+								.append(preIsQQ).append("'] = 'text: ");
+						if (syspolicy.getIsQQ() == 0)
+							sb.append("关键字");
+						else if (syspolicy.getIsQQ() == 1)
+							sb.append("QQ聚焦");
+						else if (syspolicy.getIsQQ() == 2)
+							sb.append("QQ群聚焦");
+						else if (syspolicy.getIsQQ() == 3)
+							sb.append("事件聚焦");
+						sb.append(";sortField: ").append("0").append("';");
+						preType = "";
+					}
+					if (!StringUtils.equalsIgnoreCase(preType, "Ltype"
+							+ syspolicy.getSysUserId() + syspolicy.getType())) {
+
+						preType = "Ltype" + syspolicy.getSysUserId()
+								+ syspolicy.getType();
+						type = "Ltype" + syspolicy.getSysUserId()
+								+ syspolicy.getId();
+						sb.append("data['").append(preIsQQ).append("_").append(
+								type).append("'] = 'text: ").append(
+								syspolicy.getType()).append(";sortField: ")
+								.append("0").append("';");
+
+					}
+
+					sb.append("data['").append(type).append("_Lname").append(
+							syspolicy.getId()).append("'] = 'text: ").append(
+							syspolicy.getName()).append(";hint: ").append(
+							syspolicy.getIsQQ() == 0 ? StringUtils
+									.trimToEmpty(syspolicy.getContent())
+									: syspolicy.getName()).append(
+							";sortField: ").append("0").append("';");
+				}
+			}
+
+		}
+
+		// System.out.println(sb.toString());
+		return sb.toString();
+	}
+
+	public void savePolicy(SysPolicyInfo sysPolicy) {
+		sysPolicy.setName(filterSpecil(sysPolicy.getName().toLowerCase()
+				.replaceAll("and", "").replaceAll("or", "").replaceAll("-", "")
+				.replaceAll("not", "")));
+		sysPolicy.setType(filterSpecil(sysPolicy.getType().toLowerCase()
+				.replaceAll("and", "").replaceAll("or", "").replaceAll("-", "")
+				.replaceAll("not", "")));
+		sysPolicy.setContent(filterSpecil(sysPolicy.getContent()));
+		if (sysPolicy.getIsQQ() == 3) {
+			sysPolicy.setContent(filterSpecil(sysPolicy.getAddr())
+					.toLowerCase().replaceAll("and", "").replaceAll("or", "")
+					.replaceAll("-", "").replaceAll("not", "")
+					+ " and "
+					+ filterSpecil(sysPolicy.getPersion()).toLowerCase()
+							.replaceAll("and", "").replaceAll("or", "")
+							.replaceAll("-", "").replaceAll("not", "")
+					+ " and "
+					+ filterSpecil(sysPolicy.getEvent()).toLowerCase()
+							.replaceAll("and", "").replaceAll("or", "")
+							.replaceAll("-", "").replaceAll("not", ""));
+		}
+		saveOrUpdateObject("SysPolicy.add", "SysPolicy.edit", sysPolicy);
+
+	}
+
+	private String filterSpecil(String content) {
+
+		content = StringUtils.trimToEmpty(content);
+		return content.replaceAll("\\\\r", "").replaceAll("\\\\n", "")
+				.replaceAll("'", "").replaceAll("‘", "").replaceAll(";", "")
+				.replaceAll("，", "").replaceAll("\"", "").replaceAll("“", "")
+				.replaceAll("”", "").replaceAll("<", "").replaceAll("《", "")
+				.replaceAll(">", "").replaceAll("》", "").replaceAll(":", "")
+				.replaceAll("：", "").replaceAll("；", "").replaceAll("\\r", "").replaceAll("\\n", "");
+	}
+
+	/**
+	 * 
+	 * @functon 获取类别树形菜单
+	 * @param usersession
+	 *            用户登录信息
+	 * @return 用户菜单
+	 */
+	public String getTypeData(UserSession usersession) {
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("data['-1_1'] = 'text: 分类搜索;sortField: 0';");
+		QQGroupMonitorInfo qqgroupMonitor = new QQGroupMonitorInfo();
+		if (usersession.getUsertype() != 0) {
+			qqgroupMonitor.setDepCode4Session(usersession.getSysDepartment()
+					.getCode());
+			qqgroupMonitor.setDepCode(usersession.getSysDepartment().getCode());
+		}
+		List list = getList("QQGroupMonitor.getList", qqgroupMonitor);
+		int i = 0;
+		if (list != null && list.size() > 0) {
+			Iterator it = list.iterator();
+			String preType = "";
+			String type = "";
+			while (it.hasNext()) {
+				QQGroupMonitorInfo info = (QQGroupMonitorInfo) it.next();
+
+				if (!StringUtils.equalsIgnoreCase(preType, StringUtils
+						.trimToEmpty(filterSpecil(info.getType())))) {
+
+					preType = filterSpecil(info.getType());
+					type = "typee" + info.getId();
+					sb.append("data['1_" + type + "'] = 'text: "
+							+ filterSpecil(info.getType()) + ";sortField: 0';");
+				}
+				sb.append("data['" + type + "_group" + info.getGroupId()
+						+ "'] = 'text: " + info.getGroupId());
+				if (!StringUtils.isEmpty(info.getGroupNickName())) {
+
+					sb
+							.append("(" + filterSpecil(info.getGroupNickName())
+									+ ")");
+					i++;
+
+				}
+				sb.append(";sortField: 0';");
+			}
+		}
+		// System.out.println(sb);
+		return sb.toString();
+	}
+
+	/**
+	 * *****************************************************
+	 * 
+	 * @function：将密码用MD5加密
+	 * @param：sPassword 待加密的密码字符串
+	 * @return: String MD5字符串
+	 *          ******************************************************
+	 */
+	public static String encryptPWD(String sPassword) {
+		byte cResult[] = new byte[16];
+		String sResult = "";
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(("www.MD5.com.cn" + sPassword).getBytes());
+			cResult = md.digest();
+
+			for (int i = 0; i < cResult.length; i++) {
+				if (cResult[i] < 0) {
+					cResult[i] += 128;
+				}
+				String sTemp = Integer.toHexString(cResult[i]).toUpperCase();
+				if (cResult[i] < 16) {
+					sTemp = "0" + sTemp;
+				}
+				sResult += sTemp;
+			}
+		} catch (Exception e) {
+			sResult = "";
+		}
+		return sResult;
+	}
+
+	public SysUsers getUserById(Long id) {
+
+		return (SysUsers) this.getObject("SysUsers.getObj", id);
+	}
+
+	/**
+	 * 该方法实现了四种策略的新增和修改获取策略实体类方法
+	 */
+	public SysPolicyInfo getSysPolicy(SysPolicyInfo sysPolicy,
+			UserSession usersession, String flag, String tips, String menuId) {
+
+		if (menuId.length() > 4) { // 不为根
+
+			if (menuId.startsWith("isQQ")) // 若为第一级树节点
+				sysPolicy.setIsQQ(Integer.valueOf(menuId.substring(4)));
+			else { // 为第二级或第三级数节点
+				sysPolicy = (SysPolicyInfo) getObject("SysPolicy.getObj", Long
+						.valueOf(menuId.substring(4)));
+
+			}
+			if (!StringUtils.equals("edit", tips)) { // 新增时
+				sysPolicy.setId(Long.valueOf(0));
+				sysPolicy.setContent("");
+				sysPolicy.setName("");
+				sysPolicy.setStatus(1);
+				if (StringUtils.isEmpty(flag))
+					flag = "0";
+				sysPolicy.setIsQQ(Integer.valueOf(flag));
+			} else if (sysPolicy.getIsQQ() == 3) { // 修改，当类别为事件聚焦时
+
+				if (sysPolicy.getContent() != null
+						&& sysPolicy.getContent().length() > 0) {
+					String[] temp_a = sysPolicy.getContent().split("and");
+					if (temp_a != null && temp_a.length == 3) { // 确保事件聚焦时
+						// 内容字段符合规定。
+						sysPolicy.setAddr(StringUtils.trimToEmpty(temp_a[0]));
+						sysPolicy
+								.setPersion(StringUtils.trimToEmpty(temp_a[1]));
+						sysPolicy.setEvent(StringUtils.trimToEmpty(temp_a[2]));
+					}
+				}
+			}
+		} else { // 为根 新增时需要定位策略类型
+			if (StringUtils.isEmpty(flag))
+				flag = "0";
+			sysPolicy.setIsQQ(Integer.valueOf(flag));
+		}
+		return sysPolicy;
+	}
+
+	public String validateUser(String userName, String password) {
+		Map<String, String> map = new Hashtable<String, String>();
+		map.put("userName", userName);
+
+		map.put("passWords", encryptPWD(StringUtils.trimToEmpty(password)));
+		SysUsers temp_user = (SysUsers) getObject(
+				"SysUsers.getObjByloginAndPassword", map);
+
+		if (temp_user == null) {
+			return "false";
+		} else
+			return "success";
+	}
+
+	public String getMenuData2(UserSession usersession, String flag) {
+		StringBuffer sb = new StringBuffer();
+
+		flag = StringUtils.trimToEmpty(flag);
+		sb.append("data['-1_1'] = 'text: 空间监控;sortField: 0';");
+		Map map = new Hashtable();
+		map.put("sysUserId", usersession.getId());
+
+		List listqqzone = getList("QQZone.getListMenu", map);
+
+		String preIsQQ = "-1";
+
+		String preType = "";
+
+		String type = "";
+
+		if (listqqzone != null && listqqzone.size() > 0) {
+			String temp = "data['1_" + "2" + "'] = 'text: ";
+			temp += "空间监控";
+			sb.append(temp);
+			sb.append(";sortField: ").append("0';");
+			Iterator it = listqqzone.iterator();
+			preIsQQ = "2";
+			while (it.hasNext()) {
+				QQZone qqzone = (QQZone) it.next();
+				if (!StringUtils.equalsIgnoreCase(preType, "type"
+						+ StringUtils.trimToEmpty(qqzone.getType()))) {
+					preType = "type"
+							+ StringUtils.trimToEmpty(qqzone.getType());
+					type = "type" + qqzone.getId();
+					sb.append("data['").append(preIsQQ).append("_")
+							.append(type).append("'] = 'text: ").append(
+									qqzone.getType()).append(";sortField: ")
+							.append("0").append("';");
+
+				}
+				sb.append("data['").append(type).append("_name").append(
+						qqzone.getId()).append("'] = 'text: ").append(
+						qqzone.getUin()).append(";hint: ").append(
+						qqzone.getNickName()).append(";sortField: ")
+						.append("0").append("';");
+			}
+		}
+
+		// System.out.println("==================" + sb.toString());
+
+		// 是否开启查看直接下级的策略服务
+		if (StringUtils.endsWithIgnoreCase(Constants.ISSHOWPOLICY4CHILD, "Y")) {
+			String preUsers = "";
+			preIsQQ = "-1";
+			preType = "";
+			type = "";
+			List list = getList("QQZone.getList4Menux", usersession
+					.getSysDepartment().getCode());
+			if (list != null && list.size() > 0) {
+				Iterator it = list.iterator();
+				while (it.hasNext()) {
+
+					QQZone qqzone = (QQZone) it.next();
+					if (!StringUtils.equalsIgnoreCase(preUsers, StringUtils
+							.trimToEmpty("LChildUser" + qqzone.getUserid()))) {
+
+						preUsers = "LChildUser" + qqzone.getUserid();
+						sb.append("data['").append("1").append("_").append(
+								preUsers).append("'] = 'text: ").append(
+								qqzone.getUsername()).append(";sortField: ")
+								.append("0").append("';");
+					}
+					if (!StringUtils.equalsIgnoreCase(preIsQQ, "LisQQ"
+							+ qqzone.getUserid() + "2")) {
+
+						preIsQQ = "LisQQ" + qqzone.getUserid() + "2";
+						sb.append("data['").append(preUsers).append("_")
+								.append(preIsQQ).append("'] = 'text: ");
+						sb.append("空间监控");
+						sb.append(";sortField: ").append("0").append("';");
+						preType = "";
+					}
+					if (!StringUtils.equalsIgnoreCase(preType, "Ltype"
+							+ qqzone.getUserid() + qqzone.getType())) {
+
+						preType = "Ltype" + qqzone.getUserid()
+								+ qqzone.getType();
+						type = "Ltype" + qqzone.getUserid() + qqzone.getType();
+						sb.append("data['").append(preIsQQ).append("_").append(
+								type).append("'] = 'text: ").append(
+								qqzone.getType()).append(";sortField: ")
+								.append("0").append("';");
+
+					}
+
+					sb.append("data['").append(type).append("_Lname").append(
+							qqzone.getId()).append("'] = 'text: ").append(
+							qqzone.getNickName()).append(";hint: ").append(
+							qqzone.getUin()).append(";sortField: ").append("0")
+							.append("';");
+				}
+			}
+
+		}
+		// System.out.println(sb.toString());
+		return sb.toString();
+	}
+
+}

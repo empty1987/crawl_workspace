@@ -1,0 +1,21 @@
+package com.meiah.core.util;
+
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
+public class MyFunction {
+	
+	public static String title(String type,String property){
+		
+		if(Constants.titleMap != null && Constants.titleMap.size() >0 && !StringUtils.isEmpty(type) && !StringUtils.isEmpty(property)){
+			Map map = (Map)Constants.titleMap.get(type);
+			if(map != null && map.size() >0){
+				String title = (String)map.get(property);
+				return title;
+			}
+		} 
+		return "";
+	}
+
+}
